@@ -1,292 +1,618 @@
 'use client'
 
-import { useState, useEffect, useRef } from 'react'
+import { useState, useEffect } from 'react'
 import Link from 'next/link'
 import {
-  Shield, Brain, BarChart3, Users, ChevronRight, ChevronLeft,
-  TrendingUp, Zap, Eye, Lock, ArrowRight, Play
+  Shield, BarChart3,
+  Zap, Eye, Lock, ArrowRight, Play,
+  MessageSquare, GitBranch, CheckCircle2,
+  AlertTriangle, Sparkles, Activity
 } from 'lucide-react'
+import { motion, AnimatePresence } from 'framer-motion'
 
-const slides = [
-  {
-    title: 'AI-Powered Risk Intelligence',
-    subtitle: 'Identify, Assess & Mitigate Risks',
-    description: 'Let AI do the heavy lifting. Describe a concern in plain language — our copilot generates structured risk entries, proposes controls, and assigns tasks automatically.',
-    image: 'https://images.unsplash.com/photo-1558494949-ef010cbdcc31?auto=format&fit=crop&w=1920&q=80',
-    tag: 'AI Copilot',
-  },
-  {
-    title: 'Complete Risk Hierarchy',
-    subtitle: 'Risk → Controls → Tasks → Evidence',
-    description: 'Structure every risk with directive, preventive, detective, and corrective controls. Assign tasks to control owners and track evidence submissions end-to-end.',
-    image: 'https://images.unsplash.com/photo-1551288049-bebda4e38f71?auto=format&fit=crop&w=1920&q=80',
-    tag: 'Risk Framework',
-  },
-  {
-    title: '3-Line Defence Workflow',
-    subtitle: 'Business Owner → Risk Manager → Audit',
-    description: 'Built on the Three Lines model. Business Owners report risks, Risk Managers validate and assign, Audit enforces remediation — all in one seamless platform.',
-    image: 'https://images.unsplash.com/photo-1460925895917-afdab827c52f?auto=format&fit=crop&w=1920&q=80',
-    tag: 'Governance',
-  },
-  {
-    title: 'Real-Time Risk Heat Maps',
-    subtitle: 'Visualise Exposure Across Your Organisation',
-    description: 'Interactive heat maps, org-level filters, and trend charts give Risk Managers instant visibility across 5 levels: Group → Company → Sub-Company → Department.',
-    image: 'https://images.unsplash.com/photo-1504868584819-f8e8b4b6d7e3?auto=format&fit=crop&w=1920&q=80',
-    tag: 'Analytics',
-  },
-]
+/* ─── Hero Images ─── */
 
-const features = [
-  { icon: Brain, title: 'AI Risk Copilot', desc: 'Natural language risk entry. AI generates structured risks with controls and source attributions (SEC, ISO, Risk Library).', href: '/business-owner/report-risk', a: '#06b6d4', b: '#3b82f6' },
-  { icon: BarChart3, title: 'Risk Manager Dashboard', desc: 'Heat maps, pending validations, org filters, and AI-proposed control assignments.', href: '/risk-manager/dashboard', a: '#8b5cf6', b: '#a855f7' },
-  { icon: Shield, title: 'Evidence & Review', desc: 'Business owners upload evidence. Managers approve, reject, or request changes. Full audit trail.', href: '/risk-manager/review', a: '#10b981', b: '#14b8a6' },
-  { icon: Users, title: 'Admin & User Management', desc: 'Manage users, roles, and permissions across your entire organisation hierarchy.', href: '/admin/users', a: '#f97316', b: '#f59e0b' },
+const heroImages = [
+  'https://images.unsplash.com/photo-1551288049-bebda4e38f71?w=1920&q=80',
+  'https://images.unsplash.com/photo-1460925895917-afdab827c52f?w=1920&q=80',
+  'https://images.unsplash.com/photo-1504868584819-f8e8b4b6d7e3?w=1920&q=80',
+  'https://images.unsplash.com/photo-1558494949-ef010cbdcc31?w=1920&q=80',
 ]
 
 const stats = [
-  { value: '94%', label: 'Faster Risk Identification', icon: Zap },
-  { value: '3-Line', label: 'Defence Model Built-In', icon: Shield },
-  { value: 'Real-Time', label: 'AI-Powered Insights', icon: Brain },
-  { value: '5-Level', label: 'Org Filter Hierarchy', icon: TrendingUp },
+  { value: '94%', label: 'Faster Risk ID' },
+  { value: '3-Line', label: 'Defence Model' },
+  { value: 'Real-Time', label: 'AI Insights' },
+  { value: '5-Level', label: 'Org Hierarchy' },
 ]
 
-const steps = [
-  { num: '01', title: 'Business Owner', subtitle: 'Identifies Risk', desc: 'Uses AI copilot to describe a concern. AI structures it into a formal risk entry with controls.', color: '#4ab0de', href: '/business-owner/dashboard' },
-  { num: '02', title: 'Risk Manager', subtitle: 'Validates & Assigns', desc: 'Reviews AI-generated risk, validates details, assigns control owners, creates tasks.', color: '#8b5cf6', href: '/risk-manager/dashboard' },
-  { num: '03', title: 'Audit / 3rd Line', subtitle: 'Enforces & Closes', desc: 'Reviews evidence, approves completion, enforces remediation, and closes the risk loop.', color: '#10b981', href: '/risk-manager/review' },
+/* ─── Feature Sections ─── */
+
+const featureSections = [
+  {
+    tag: 'AI Copilot',
+    tagColor: '#4ab0de',
+    title: 'Describe a risk in plain language.',
+    titleAccent: 'AI structures it instantly.',
+    description: 'Your AI copilot turns natural language concerns into formal, structured risk entries — complete with controls, tasks, and source attributions from SEC, ISO 27001, and Risk Library.',
+    bullets: [
+      'Natural language risk identification',
+      'Auto-generated controls & task assignments',
+      'Source attribution (SEC, ISO, Risk Library)',
+    ],
+    href: '/business-owner/report-risk',
+    mockup: 'copilot',
+    bg: 'from-[rgba(74,176,222,0.04)] to-transparent',
+  },
+  {
+    tag: 'Risk Framework',
+    tagColor: '#8b5cf6',
+    title: 'Full risk hierarchy.',
+    titleAccent: 'Complete traceability.',
+    description: 'Every risk is structured with directive, preventive, detective, and corrective controls. Each control breaks into tasks with assigned owners, deadlines, and evidence requirements.',
+    bullets: [
+      'Risk → Controls → Tasks → Evidence',
+      'Directive, preventive, detective, corrective',
+      'Progress tracking at every level',
+    ],
+    href: '/risk-manager/dashboard',
+    mockup: 'hierarchy',
+    bg: 'from-[rgba(139,92,246,0.04)] to-transparent',
+  },
+  {
+    tag: 'Governance',
+    tagColor: '#10b981',
+    title: 'Three lines of defence.',
+    titleAccent: 'One seamless workflow.',
+    description: 'Built on the Three Lines model. Business Owners identify risks, Risk Managers validate and assign control owners, Audit enforces remediation and validates completion.',
+    bullets: [
+      'Business Owner → Risk Manager → Audit',
+      'Role-based views and permissions',
+      'Full audit trail on every action',
+    ],
+    href: '/risk-manager/review',
+    mockup: 'workflow',
+    bg: 'from-[rgba(16,185,129,0.04)] to-transparent',
+  },
+  {
+    tag: 'Analytics',
+    tagColor: '#f59e0b',
+    title: 'See risk exposure.',
+    titleAccent: 'Before it becomes a crisis.',
+    description: 'Interactive heat maps, org-level filters, and trend charts give Risk Managers instant visibility. Filter across 5 levels: Group → Company → Sub-Company → Department → Team.',
+    bullets: [
+      'Interactive risk heat maps',
+      '5-level organisation filter',
+      'Real-time trend analysis',
+    ],
+    href: '/risk-manager/dashboard',
+    mockup: 'heatmap',
+    bg: 'from-[rgba(245,158,11,0.04)] to-transparent',
+  },
 ]
+
+/* ─── Mockup Components ─── */
+
+function CopilotMockup() {
+  return (
+    <div className="glass-card p-6 md:p-8 w-full max-w-[500px] animate-float">
+      <div className="flex items-center gap-3 mb-5">
+        <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-[#4ab0de] to-[#8b5cf6] flex items-center justify-center">
+          <Sparkles size={18} color="#fff" />
+        </div>
+        <div>
+          <span className="text-sm font-semibold text-white block">AI Risk Copilot</span>
+          <span className="text-[11px] text-[#6a6a8a]">Natural Language Processing</span>
+        </div>
+        <div className="ml-auto flex items-center gap-1.5">
+          <div className="w-2 h-2 rounded-full bg-[#10b981] pulse-dot" />
+          <span className="text-[11px] text-[#10b981] font-medium">Live</span>
+        </div>
+      </div>
+      <div className="space-y-3 mb-5">
+        <div className="flex justify-end">
+          <div className="bg-[#2a2a5a] rounded-2xl rounded-br-sm px-4 py-2.5 max-w-[340px]">
+            <p className="text-[13px] text-[#e0e0f0] leading-relaxed">&quot;We have concerns about unauthorised access to financial data&quot;</p>
+          </div>
+        </div>
+        <div className="flex justify-start">
+          <div className="bg-gradient-to-br from-[rgba(74,176,222,0.12)] to-[rgba(139,92,246,0.12)] border border-[rgba(74,176,222,0.2)] rounded-2xl rounded-bl-sm px-4 py-3 max-w-[380px]">
+            <p className="text-[13px] text-[#4ab0de] font-semibold mb-1.5">Risk Generated</p>
+            <p className="text-[12px] text-[#a0a0c0] leading-relaxed mb-2.5">Unauthorised access to financial data — High risk with 3 proposed controls.</p>
+            <div className="flex flex-wrap gap-1.5">
+              <span className="text-[11px] px-2.5 py-1 rounded-lg bg-[rgba(74,176,222,0.15)] text-[#4ab0de] font-medium">3 Controls</span>
+              <span className="text-[11px] px-2.5 py-1 rounded-lg bg-[rgba(139,92,246,0.15)] text-[#8b5cf6] font-medium">7 Tasks</span>
+              <span className="text-[11px] px-2.5 py-1 rounded-lg bg-[rgba(16,185,129,0.15)] text-[#10b981] font-medium">SEC, ISO</span>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div className="flex items-center gap-3 px-4 py-3 rounded-xl bg-[rgba(10,10,26,0.5)] border border-[#2a2a5a]">
+        <span className="text-[13px] text-[#6a6a8a]">Describe your concern...</span>
+        <ArrowRight size={14} className="ml-auto text-[#4ab0de]" />
+      </div>
+    </div>
+  )
+}
+
+function HierarchyMockup() {
+  return (
+    <div className="glass-card p-6 md:p-8 w-full max-w-[500px] animate-float-slow">
+      <div className="flex items-center gap-3 mb-5">
+        <AlertTriangle size={18} className="text-[#f59e0b]" />
+        <div>
+          <span className="text-sm font-semibold text-white block">Unauthorised Data Access</span>
+          <span className="text-[11px] text-[#6a6a8a]">RSK-2024-047</span>
+        </div>
+        <span className="ml-auto text-[11px] px-2.5 py-1 rounded-full bg-[rgba(239,68,68,0.15)] text-[#ef4444] font-semibold">High</span>
+      </div>
+      <div className="space-y-2.5 pl-2">
+        {[
+          { label: 'Role-Based Access Control', type: 'Preventive', progress: 90, color: '#4ab0de' },
+          { label: 'Multi-Factor Authentication', type: 'Preventive', progress: 60, color: '#8b5cf6' },
+          { label: 'Network Segmentation', type: 'Detective', progress: 30, color: '#10b981' },
+          { label: 'Incident Response Plan', type: 'Corrective', progress: 0, color: '#f59e0b' },
+        ].map((c, i) => (
+          <div key={i} className="flex items-start gap-2.5">
+            <div className="flex flex-col items-center mt-1.5">
+              <div className="w-2.5 h-2.5 rounded-full" style={{ background: c.color }} />
+              {i < 3 && <div className="w-px h-7" style={{ background: `${c.color}40` }} />}
+            </div>
+            <div className="flex-1 bg-[rgba(10,10,26,0.4)] rounded-xl px-4 py-2.5 border border-[#2a2a5a]">
+              <div className="flex items-center justify-between mb-1">
+                <span className="text-[12px] font-medium text-[#e0e0f0]">{c.label}</span>
+                <span className="text-[10px] px-2 py-0.5 rounded-lg" style={{ background: `${c.color}20`, color: c.color }}>{c.type}</span>
+              </div>
+              <div className="flex items-center gap-3 mt-1.5">
+                <div className="flex-1 h-1.5 rounded-full bg-[#2a2a5a] overflow-hidden">
+                  <div className="h-full rounded-full transition-all duration-1000" style={{ width: `${c.progress}%`, background: c.color }} />
+                </div>
+                <span className="text-[11px] font-semibold" style={{ color: c.color }}>{c.progress}%</span>
+              </div>
+            </div>
+          </div>
+        ))}
+      </div>
+    </div>
+  )
+}
+
+function WorkflowMockup() {
+  return (
+    <div className="glass-card p-6 md:p-8 w-full max-w-[500px] animate-float">
+      <div className="flex items-center gap-3 mb-5">
+        <Activity size={18} className="text-[#4ab0de]" />
+        <div>
+          <span className="text-sm font-semibold text-white block">3-Line Defence Workflow</span>
+          <span className="text-[11px] text-[#6a6a8a]">Active risk lifecycle</span>
+        </div>
+      </div>
+      <div className="space-y-3.5">
+        {[
+          { role: 'Business Owner', status: 'Risk Submitted', statusColor: '#10b981', icon: MessageSquare, done: true, detail: 'AI-generated risk entry with 3 controls' },
+          { role: 'Risk Manager', status: 'Validating Controls', statusColor: '#8b5cf6', icon: Eye, done: false, detail: 'Reviewing AI suggestions, assigning owners' },
+          { role: 'Audit / 3rd Line', status: 'Pending Evidence', statusColor: '#6a6a8a', icon: CheckCircle2, done: false, detail: 'Awaiting remediation evidence' },
+        ].map((w, i) => (
+          <div key={i} className="flex items-start gap-3">
+            <div className="flex flex-col items-center">
+              <div className={`w-10 h-10 rounded-full flex items-center justify-center border-2 ${w.done ? 'border-[#10b981] bg-[rgba(16,185,129,0.15)]' : 'border-[#2a2a5a] bg-[rgba(10,10,26,0.4)]'}`}>
+                <w.icon size={16} color={w.done ? '#10b981' : '#6a6a8a'} />
+              </div>
+              {i < 2 && <div className="w-px h-4 mt-1" style={{ background: w.done ? '#10b981' : '#2a2a5a' }} />}
+            </div>
+            <div className="flex-1 pt-0.5">
+              <div className="flex items-center gap-2 mb-0.5">
+                <span className="text-[13px] font-semibold text-white">{w.role}</span>
+                {w.done && <CheckCircle2 size={14} className="text-[#10b981]" />}
+              </div>
+              <span className="text-[12px] font-medium block mb-0.5" style={{ color: w.statusColor }}>{w.status}</span>
+              <span className="text-[11px] text-[#6a6a8a]">{w.detail}</span>
+            </div>
+          </div>
+        ))}
+      </div>
+      <div className="mt-5 pt-4 border-t border-[#2a2a5a]">
+        <div className="flex items-center justify-between mb-1.5">
+          <span className="text-[12px] text-[#a0a0c0]">Overall Progress</span>
+          <span className="text-[12px] font-bold text-[#4ab0de]">33%</span>
+        </div>
+        <div className="h-2 rounded-full bg-[#2a2a5a] overflow-hidden">
+          <div className="h-full rounded-full bg-gradient-to-r from-[#4ab0de] to-[#8b5cf6]" style={{ width: '33%' }} />
+        </div>
+      </div>
+    </div>
+  )
+}
+
+function HeatmapMockup() {
+  const cells = [
+    [0.1, 0.2, 0.4, 0.6, 0.9],
+    [0.1, 0.3, 0.5, 0.7, 0.5],
+    [0.2, 0.4, 0.8, 0.6, 0.3],
+    [0.3, 0.6, 0.5, 0.3, 0.2],
+    [0.5, 0.7, 0.4, 0.2, 0.1],
+  ]
+  const getColor = (v: number) => {
+    if (v >= 0.8) return '#ef4444'
+    if (v >= 0.6) return '#f59e0b'
+    if (v >= 0.4) return '#4ab0de'
+    if (v >= 0.2) return '#10b981'
+    return '#2a2a5a'
+  }
+  return (
+    <div className="glass-card p-6 md:p-8 w-full max-w-[500px] animate-float-slow">
+      <div className="flex items-center justify-between mb-5">
+        <div className="flex items-center gap-3">
+          <BarChart3 size={18} className="text-[#8b5cf6]" />
+          <div>
+            <span className="text-sm font-semibold text-white block">Risk Heat Map</span>
+            <span className="text-[11px] text-[#6a6a8a]">Organisation-wide</span>
+          </div>
+        </div>
+        <span className="text-[11px] px-2.5 py-1 rounded-lg bg-[rgba(139,92,246,0.15)] text-[#8b5cf6] font-medium">Live</span>
+      </div>
+      <div className="flex items-end gap-1.5 mb-1.5 pl-12">
+        {['Rare', 'Unlikely', 'Possible', 'Likely', 'Certain'].map((l) => (
+          <span key={l} className="flex-1 text-center text-[9px] text-[#6a6a8a] font-medium">{l}</span>
+        ))}
+      </div>
+      <div className="space-y-1.5">
+        {cells.map((row, ri) => (
+          <div key={ri} className="flex items-center gap-1.5">
+            <span className="w-10 text-[9px] text-[#6a6a8a] text-right pr-1.5 font-medium">
+              {['Insig.', 'Minor', 'Mod.', 'Major', 'Catas.'][ri]}
+            </span>
+            {row.map((v, ci) => (
+              <div
+                key={ci}
+                className="flex-1 aspect-square rounded-lg flex items-center justify-center hover:scale-110 transition-transform cursor-pointer"
+                style={{
+                  background: `${getColor(v)}${v >= 0.6 ? '40' : '20'}`,
+                  border: `1px solid ${getColor(v)}30`,
+                }}
+              >
+                <span className="text-[12px] font-bold" style={{ color: getColor(v) }}>
+                  {Math.round(v * 10)}
+                </span>
+              </div>
+            ))}
+          </div>
+        ))}
+      </div>
+      <div className="flex items-center justify-center gap-4 mt-4 pt-3 border-t border-[#2a2a5a]">
+        {[
+          { label: 'Low', color: '#10b981' },
+          { label: 'Medium', color: '#4ab0de' },
+          { label: 'High', color: '#f59e0b' },
+          { label: 'Critical', color: '#ef4444' },
+        ].map((l) => (
+          <div key={l.label} className="flex items-center gap-1.5">
+            <div className="w-2.5 h-2.5 rounded" style={{ background: l.color }} />
+            <span className="text-[11px] text-[#a0a0c0]">{l.label}</span>
+          </div>
+        ))}
+      </div>
+    </div>
+  )
+}
+
+const featureMockups: Record<string, React.FC> = {
+  copilot: CopilotMockup,
+  hierarchy: HierarchyMockup,
+  workflow: WorkflowMockup,
+  heatmap: HeatmapMockup,
+}
+
+/* ─── How It Works Steps ─── */
+
+const steps = [
+  { num: '01', title: 'Business Owner', subtitle: 'Identifies Risk', desc: 'Uses AI copilot to describe a concern. The platform structures it into a formal risk entry with proposed controls and tasks.', color: '#4ab0de', href: '/business-owner/dashboard', icon: MessageSquare },
+  { num: '02', title: 'Risk Manager', subtitle: 'Validates & Assigns', desc: 'Reviews AI-generated risks, validates details, accepts or modifies controls, assigns owners, and creates remediation tasks.', color: '#8b5cf6', href: '/risk-manager/dashboard', icon: GitBranch },
+  { num: '03', title: 'Audit / 3rd Line', subtitle: 'Enforces & Closes', desc: 'Reviews evidence, approves remediation, enforces follow-ups, and formally closes the risk loop.', color: '#10b981', href: '/risk-manager/review', icon: CheckCircle2 },
+]
+
+/* ─── Main Page ─── */
 
 export default function LandingPage() {
   const [current, setCurrent] = useState(0)
-  const [fading, setFading] = useState(false)
-  const timerRef = useRef<ReturnType<typeof setInterval> | null>(null)
-
-  const goTo = (idx: number) => {
-    if (fading) return
-    setFading(true)
-    setTimeout(() => { setCurrent(idx); setFading(false) }, 400)
-  }
-
-  const next = () => goTo((current + 1) % slides.length)
-  const prev = () => goTo((current - 1 + slides.length) % slides.length)
 
   useEffect(() => {
-    timerRef.current = setInterval(next, 6000)
-    return () => { if (timerRef.current) clearInterval(timerRef.current) }
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [current])
-
-  const slide = slides[current]
+    const interval = setInterval(() => {
+      setCurrent((prev) => (prev + 1) % heroImages.length)
+    }, 6000)
+    return () => clearInterval(interval)
+  }, [])
 
   return (
-    <div style={{ background: 'var(--bg-primary)', minHeight: '100vh' }}>
+    <div className="flex min-h-screen flex-col" style={{ background: 'var(--bg-primary)' }}>
 
-      {/* NAV */}
-      <nav style={{
-        position: 'fixed', top: 0, left: 0, right: 0, zIndex: 50,
-        background: 'rgba(10,10,26,0.85)', backdropFilter: 'blur(12px)',
-        borderBottom: '1px solid var(--border-color)',
-        padding: '0 40px', height: 64,
-        display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-      }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-          <div style={{
-            width: 36, height: 36, borderRadius: 10,
-            background: 'linear-gradient(135deg,#4ab0de,#8b5cf6)',
-            display: 'flex', alignItems: 'center', justifyContent: 'center',
-          }}>
-            <Shield size={18} color="#fff" />
-          </div>
-          <span style={{ fontSize: 18, fontWeight: 700 }} className="gradient-text">RiskAI</span>
-          <span style={{ fontSize: 11, color: 'var(--text-muted)', marginLeft: 2 }}>Platform</span>
-        </div>
-        <div style={{ display: 'flex', gap: 8 }}>
-          <Link href="/business-owner/dashboard" style={{ padding: '8px 16px', borderRadius: 8, fontSize: 13, fontWeight: 500, color: 'var(--text-secondary)', textDecoration: 'none', border: '1px solid var(--border-color)', background: 'var(--bg-card)' }}>Business Owner</Link>
-          <Link href="/risk-manager/dashboard" style={{ padding: '8px 16px', borderRadius: 8, fontSize: 13, fontWeight: 500, color: 'var(--text-secondary)', textDecoration: 'none', border: '1px solid var(--border-color)', background: 'var(--bg-card)' }}>Risk Manager</Link>
-          <Link href="/admin/users" style={{ padding: '8px 16px', borderRadius: 8, fontSize: 13, fontWeight: 500, color: '#fff', textDecoration: 'none', background: 'linear-gradient(135deg,#4ab0de,#8b5cf6)' }}>Admin</Link>
-        </div>
-      </nav>
-
-      {/* HERO */}
-      <section style={{ position: 'relative', height: '100vh', overflow: 'hidden' }}>
-        <div style={{
-          position: 'absolute', inset: 0,
-          backgroundImage: `url(${slide.image})`,
-          backgroundSize: 'cover', backgroundPosition: 'center',
-          transition: 'opacity 0.6s ease', opacity: fading ? 0 : 1,
-          transform: 'scale(1.03)',
-        }} />
-        <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(to bottom, rgba(10,10,26,0.75) 0%, rgba(10,10,26,0.55) 40%, rgba(10,10,26,0.80) 100%)' }} />
-
-        <div style={{
-          position: 'relative', zIndex: 10, height: '100%',
-          display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center',
-          textAlign: 'center', padding: '0 40px', paddingTop: 64,
-        }}>
-          <div style={{ maxWidth: 780 }}>
-            <div style={{
-              display: 'inline-flex', alignItems: 'center', gap: 8, padding: '6px 14px',
-              borderRadius: 20, marginBottom: 24, background: 'rgba(74,176,222,0.15)',
-              border: '1px solid rgba(74,176,222,0.3)', fontSize: 12, fontWeight: 600,
-              color: '#4ab0de', opacity: fading ? 0 : 1, transition: 'opacity 0.4s',
-            }}>
-              <div style={{ width: 6, height: 6, borderRadius: '50%', background: '#4ab0de' }} className="pulse-dot" />
-              {slide.tag}
+      {/* ── Nav — transparent over hero ── */}
+      <header className="absolute top-0 left-0 right-0 z-50">
+        <div className="mx-auto flex h-20 max-w-[1400px] items-center justify-between px-6 md:px-12">
+          <div className="flex items-center gap-3">
+            <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-white/15 backdrop-blur-md">
+              <Shield className="h-5 w-5 text-white" />
             </div>
-            <h1 style={{ fontSize: 64, fontWeight: 800, lineHeight: 1.1, marginBottom: 16, opacity: fading ? 0 : 1, transition: 'opacity 0.4s 0.1s' }} className="gradient-text-hero">
-              {slide.title}
-            </h1>
-            <h2 style={{ fontSize: 22, fontWeight: 400, color: 'var(--text-secondary)', marginBottom: 20, opacity: fading ? 0 : 1, transition: 'opacity 0.4s 0.15s' }}>
-              {slide.subtitle}
-            </h2>
-            <p style={{ fontSize: 16, color: 'var(--text-muted)', lineHeight: 1.8, marginBottom: 40, maxWidth: 620, margin: '0 auto 40px', opacity: fading ? 0 : 1, transition: 'opacity 0.4s 0.2s' }}>
-              {slide.description}
-            </p>
-            <div style={{ display: 'flex', gap: 12, justifyContent: 'center', opacity: fading ? 0 : 1, transition: 'opacity 0.4s 0.25s' }}>
-              <Link href="/business-owner/dashboard" className="btn-primary" style={{ textDecoration: 'none', fontSize: 15, padding: '12px 28px' }}>
-                <Play size={16} /> Enter Platform <ArrowRight size={16} />
-              </Link>
-              <Link href="/risk-manager/dashboard" className="btn-secondary" style={{ textDecoration: 'none', fontSize: 15, padding: '12px 28px' }}>
-                Risk Manager View
-              </Link>
-            </div>
+            <span className="text-xl font-bold tracking-tight text-white font-display">
+              RiskAI
+            </span>
           </div>
-        </div>
-
-        {/* Dots */}
-        <div style={{ position: 'absolute', bottom: 40, left: '50%', transform: 'translateX(-50%)', display: 'flex', gap: 8, zIndex: 10 }}>
-          {slides.map((_, i) => (
-            <button key={i} onClick={() => goTo(i)} style={{
-              width: i === current ? 32 : 8, height: 8, borderRadius: 4,
-              border: 'none', cursor: 'pointer',
-              background: i === current ? 'linear-gradient(135deg,#4ab0de,#8b5cf6)' : 'rgba(255,255,255,0.25)',
-              transition: 'all 0.4s ease',
-            }} />
-          ))}
-        </div>
-
-        {/* Arrows */}
-        {[{ fn: prev, icon: ChevronLeft, side: 'left' }, { fn: next, icon: ChevronRight, side: 'right' }].map(({ fn, icon: Icon, side }) => (
-          <button key={side} onClick={fn} style={{
-            position: 'absolute', [side]: 24, top: '50%', transform: 'translateY(-50%)',
-            background: 'rgba(26,26,58,0.7)', border: '1px solid var(--border-color)',
-            width: 44, height: 44, borderRadius: '50%', cursor: 'pointer',
-            display: 'flex', alignItems: 'center', justifyContent: 'center',
-            color: '#fff', zIndex: 10,
-          }}>
-            <Icon size={18} />
-          </button>
-        ))}
-      </section>
-
-      {/* STATS */}
-      <section style={{
-        background: 'linear-gradient(135deg,rgba(74,176,222,0.06),rgba(139,92,246,0.06))',
-        borderTop: '1px solid var(--border-color)', borderBottom: '1px solid var(--border-color)',
-        padding: '28px 80px', display: 'grid', gridTemplateColumns: 'repeat(4,1fr)', gap: 0,
-      }}>
-        {stats.map((s, i) => (
-          <div key={i} style={{
-            display: 'flex', alignItems: 'center', gap: 16, padding: '0 32px',
-            borderRight: i < 3 ? '1px solid var(--border-color)' : 'none',
-          }}>
-            <div style={{ width: 48, height: 48, borderRadius: 12, background: 'linear-gradient(135deg,rgba(74,176,222,0.15),rgba(139,92,246,0.15))', border: '1px solid rgba(74,176,222,0.2)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-              <s.icon size={22} color="#4ab0de" />
-            </div>
-            <div>
-              <div style={{ fontSize: 22, fontWeight: 800 }} className="gradient-text">{s.value}</div>
-              <div style={{ fontSize: 12, color: 'var(--text-muted)', marginTop: 2 }}>{s.label}</div>
-            </div>
-          </div>
-        ))}
-      </section>
-
-      {/* FEATURES */}
-      <section style={{ padding: '80px 80px' }}>
-        <div style={{ textAlign: 'center', marginBottom: 56 }}>
-          <div style={{ display: 'inline-block', padding: '6px 16px', borderRadius: 20, marginBottom: 16, background: 'rgba(139,92,246,0.15)', border: '1px solid rgba(139,92,246,0.3)', fontSize: 12, fontWeight: 600, color: '#8b5cf6' }}>
-            Platform Overview
-          </div>
-          <h2 style={{ fontSize: 38, fontWeight: 800, marginBottom: 12 }}>
-            <span className="gradient-text">Three Roles.</span>{' '}
-            <span style={{ color: 'var(--text-primary)' }}>One Platform.</span>
-          </h2>
-          <p style={{ fontSize: 15, color: 'var(--text-muted)', maxWidth: 560, margin: '0 auto' }}>
-            Business Owners report risks with AI assistance. Risk Managers validate and assign. Audit enforces and validates.
-          </p>
-        </div>
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2,1fr)', gap: 20, maxWidth: 960, margin: '0 auto' }}>
-          {features.map((f, i) => (
-            <Link key={i} href={f.href} style={{ textDecoration: 'none' }}>
-              <div style={{ background: 'var(--bg-card)', border: '1px solid var(--border-color)', borderRadius: 16, padding: '24px', transition: 'all 0.3s', cursor: 'pointer' }}
-                onMouseEnter={e => { (e.currentTarget as HTMLDivElement).style.borderColor = '#4ab0de'; (e.currentTarget as HTMLDivElement).style.transform = 'translateY(-4px)'; (e.currentTarget as HTMLDivElement).style.boxShadow = '0 12px 40px rgba(74,176,222,0.12)' }}
-                onMouseLeave={e => { (e.currentTarget as HTMLDivElement).style.borderColor = 'var(--border-color)'; (e.currentTarget as HTMLDivElement).style.transform = 'none'; (e.currentTarget as HTMLDivElement).style.boxShadow = 'none' }}
-              >
-                <div style={{ display: 'flex', alignItems: 'flex-start', gap: 14 }}>
-                  <div style={{ width: 48, height: 48, borderRadius: 12, background: `linear-gradient(135deg,${f.a},${f.b})`, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
-                    <f.icon size={22} color="#fff" />
-                  </div>
-                  <div style={{ flex: 1 }}>
-                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 6 }}>
-                      <h3 style={{ fontSize: 16, fontWeight: 700, color: 'var(--text-primary)' }}>{f.title}</h3>
-                      <ChevronRight size={15} color="var(--text-muted)" />
-                    </div>
-                    <p style={{ fontSize: 13, color: 'var(--text-muted)', lineHeight: 1.6 }}>{f.desc}</p>
-                  </div>
-                </div>
-              </div>
+          <div className="flex items-center gap-3">
+            <Link href="/business-owner/dashboard" className="px-4 py-2 rounded-lg text-sm font-medium text-white/70 hover:text-white hover:bg-white/10 transition-all no-underline">
+              Business Owner
             </Link>
-          ))}
+            <Link href="/risk-manager/dashboard" className="px-4 py-2 rounded-lg text-sm font-medium text-white/70 hover:text-white hover:bg-white/10 transition-all no-underline">
+              Risk Manager
+            </Link>
+            <Link href="/admin/users" className="px-5 py-2.5 rounded-lg text-sm font-medium text-white bg-white/15 backdrop-blur-md hover:bg-white/25 border border-white/20 transition-all no-underline">
+              Admin Panel
+            </Link>
+          </div>
         </div>
-      </section>
+      </header>
 
-      {/* HOW IT WORKS */}
-      <section style={{ padding: '80px 80px', background: 'linear-gradient(135deg,rgba(74,176,222,0.04),rgba(139,92,246,0.04))', borderTop: '1px solid var(--border-color)' }}>
-        <div style={{ textAlign: 'center', marginBottom: 48 }}>
-          <h2 style={{ fontSize: 34, fontWeight: 800, marginBottom: 8 }}><span className="gradient-text">How It Works</span></h2>
-          <p style={{ fontSize: 14, color: 'var(--text-muted)' }}>Three lines of defence, fully digitised</p>
-        </div>
-        <div style={{ display: 'flex', gap: 0, maxWidth: 840, margin: '0 auto', alignItems: 'stretch' }}>
-          {steps.map((step, i) => (
-            <div key={i} style={{ display: 'flex', alignItems: 'center', flex: 1 }}>
-              <Link href={step.href} style={{ textDecoration: 'none', flex: 1 }}>
-                <div style={{ background: 'var(--bg-card)', border: '1px solid var(--border-color)', borderRadius: 16, padding: '24px 20px', textAlign: 'center', transition: 'all 0.3s', height: '100%' }}
-                  onMouseEnter={e => { (e.currentTarget as HTMLDivElement).style.borderColor = step.color; (e.currentTarget as HTMLDivElement).style.transform = 'translateY(-4px)' }}
-                  onMouseLeave={e => { (e.currentTarget as HTMLDivElement).style.borderColor = 'var(--border-color)'; (e.currentTarget as HTMLDivElement).style.transform = 'none' }}
-                >
-                  <div style={{ width: 48, height: 48, borderRadius: '50%', margin: '0 auto 14px', background: `${step.color}20`, border: `2px solid ${step.color}40`, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 16, fontWeight: 800, color: step.color }}>{step.num}</div>
-                  <div style={{ fontSize: 14, fontWeight: 700, color: 'var(--text-primary)', marginBottom: 4 }}>{step.title}</div>
-                  <div style={{ fontSize: 11, fontWeight: 600, color: step.color, marginBottom: 10 }}>{step.subtitle}</div>
-                  <div style={{ fontSize: 12, color: 'var(--text-muted)', lineHeight: 1.6 }}>{step.desc}</div>
+      <main className="flex-1">
+
+        {/* ══════════════════════════════════════════════
+            HERO — Full Screen with Image Slider
+        ══════════════════════════════════════════════ */}
+        <section className="relative h-screen min-h-[750px] overflow-hidden">
+          {/* Rotating background images */}
+          <AnimatePresence mode="wait">
+            <motion.img
+              key={current}
+              src={heroImages[current]}
+              alt="Platform background"
+              initial={{ opacity: 0, scale: 1.1 }}
+              animate={{ opacity: 1, scale: 1 }}
+              exit={{ opacity: 0, scale: 1.05 }}
+              transition={{ duration: 1.2 }}
+              className="absolute inset-0 h-full w-full object-cover"
+            />
+          </AnimatePresence>
+
+          {/* Gradient overlays */}
+          <div className="absolute inset-0 bg-gradient-to-b from-black/70 via-black/50 to-[#0a0a1a]" />
+          <div className="absolute inset-0 bg-gradient-to-r from-[rgba(74,176,222,0.1)] to-[rgba(139,92,246,0.08)]" />
+
+          {/* Hero content — centered */}
+          <div className="relative z-10 flex h-full flex-col items-center justify-center px-6">
+            <motion.div
+              initial={{ opacity: 0, y: 30 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.8, delay: 0.2 }}
+              className="text-center"
+            >
+              {/* Tag */}
+              <div className="mb-8 inline-flex items-center gap-2.5 rounded-full border border-white/20 bg-white/10 px-5 py-2 text-sm font-semibold text-white/90 backdrop-blur-md">
+                <Zap className="h-4 w-4" />
+                AI-Powered Risk Management
+              </div>
+
+              {/* Title */}
+              <h1 className="font-display text-5xl md:text-7xl lg:text-8xl font-extrabold leading-[1.05] tracking-tight text-white">
+                Manage risk with
+                <br />
+                <span className="gradient-text-hero">intelligence.</span>
+              </h1>
+
+              {/* Subtitle */}
+              <p className="mx-auto mt-7 max-w-2xl text-lg md:text-xl leading-relaxed text-white/60">
+                From AI-powered risk identification to automated control assignment
+                and evidence tracking — one platform for your entire risk lifecycle.
+              </p>
+
+              {/* CTAs */}
+              <div className="mt-12 flex items-center justify-center gap-4">
+                <Link href="/business-owner/dashboard" className="btn-primary no-underline text-base md:text-lg px-8 py-4 shadow-lg shadow-[rgba(74,176,222,0.25)]">
+                  <Play size={18} /> Enter Platform <ArrowRight size={18} />
+                </Link>
+                <Link href="/risk-manager/dashboard" className="px-8 py-4 rounded-lg text-base md:text-lg font-medium text-white bg-white/10 backdrop-blur-md hover:bg-white/20 border border-white/20 transition-all no-underline inline-flex items-center gap-2">
+                  Risk Manager View
+                </Link>
+              </div>
+            </motion.div>
+
+            {/* Stats strip */}
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.6, delay: 0.7 }}
+              className="mt-16 grid w-full max-w-3xl grid-cols-4 divide-x divide-white/15 rounded-2xl border border-white/15 bg-white/10 p-6 md:p-8 backdrop-blur-lg"
+            >
+              {stats.map((s) => (
+                <div key={s.label} className="text-center">
+                  <div className="text-2xl md:text-3xl font-extrabold text-white font-display">{s.value}</div>
+                  <div className="mt-1 text-xs md:text-sm text-white/50">{s.label}</div>
                 </div>
-              </Link>
-              {i < steps.length - 1 && <div style={{ padding: '0 12px', color: 'var(--text-muted)', flexShrink: 0 }}><ChevronRight size={20} /></div>}
+              ))}
+            </motion.div>
+
+            {/* Slider dots */}
+            <div className="mt-8 flex gap-2">
+              {heroImages.map((_, i) => (
+                <button
+                  key={i}
+                  onClick={() => setCurrent(i)}
+                  className={`h-1.5 rounded-full transition-all duration-500 border-none cursor-pointer ${
+                    i === current ? 'w-10 bg-white' : 'w-2.5 bg-white/40 hover:bg-white/60'
+                  }`}
+                />
+              ))}
             </div>
-          ))}
-        </div>
-      </section>
+          </div>
+        </section>
 
-      {/* CTA */}
-      <section style={{ padding: '80px 80px', textAlign: 'center', borderTop: '1px solid var(--border-color)' }}>
-        <h2 style={{ fontSize: 38, fontWeight: 800, marginBottom: 14 }}>Ready to <span className="gradient-text">Manage Risk Smarter</span>?</h2>
-        <p style={{ fontSize: 15, color: 'var(--text-muted)', marginBottom: 36 }}>Explore the full demo — no sign-up required.</p>
-        <div style={{ display: 'flex', gap: 12, justifyContent: 'center', flexWrap: 'wrap' }}>
-          <Link href="/business-owner/dashboard" className="btn-primary" style={{ textDecoration: 'none', fontSize: 14 }}><Eye size={15} /> Business Owner View</Link>
-          <Link href="/risk-manager/dashboard" className="btn-secondary" style={{ textDecoration: 'none', fontSize: 14 }}><BarChart3 size={15} /> Risk Manager View</Link>
-          <Link href="/admin/users" className="btn-secondary" style={{ textDecoration: 'none', fontSize: 14 }}><Lock size={15} /> Admin Panel</Link>
-        </div>
-      </section>
+        {/* ══════════════════════════════════════════════
+            FEATURE SECTIONS — Continuous Flowing Scroll
+        ══════════════════════════════════════════════ */}
+        {featureSections.map((section, i) => {
+          const Mockup = featureMockups[section.mockup]
+          const isReversed = i % 2 === 1
 
-      {/* FOOTER */}
-      <footer style={{ padding: '20px 80px', background: 'var(--bg-secondary)', borderTop: '1px solid var(--border-color)', display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: 12, color: 'var(--text-muted)' }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-          <Shield size={13} color="#4ab0de" />
-          <span className="gradient-text" style={{ fontWeight: 700 }}>RiskAI Platform</span>
+          return (
+            <section
+              key={i}
+              className={`relative py-24 md:py-32 px-6 md:px-12 overflow-hidden bg-gradient-to-b ${section.bg}`}
+              style={{ borderTop: i === 0 ? 'none' : '1px solid var(--border-color)' }}
+            >
+              {/* Subtle side glow */}
+              <div
+                className="absolute top-0 w-[500px] h-[500px] rounded-full opacity-20 blur-[120px]"
+                style={{
+                  background: section.tagColor,
+                  [isReversed ? 'left' : 'right']: '-200px',
+                  top: '50%',
+                  transform: 'translateY(-50%)',
+                }}
+              />
+
+              <div className={`relative z-10 w-full max-w-[1300px] mx-auto flex flex-col ${isReversed ? 'lg:flex-row-reverse' : 'lg:flex-row'} items-center gap-12 lg:gap-20`}>
+
+                {/* Text */}
+                <motion.div
+                  className="flex-1 max-w-xl"
+                  initial={{ opacity: 0, x: isReversed ? 40 : -40 }}
+                  whileInView={{ opacity: 1, x: 0 }}
+                  viewport={{ once: true, margin: '-100px' }}
+                  transition={{ duration: 0.6 }}
+                >
+                  <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full mb-6" style={{ background: `${section.tagColor}15`, border: `1px solid ${section.tagColor}30` }}>
+                    <span className="text-sm font-semibold tracking-wide uppercase" style={{ color: section.tagColor }}>{section.tag}</span>
+                  </div>
+
+                  <h2 className="font-display text-3xl md:text-4xl lg:text-5xl font-extrabold leading-[1.1] mb-5">
+                    <span className="text-white">{section.title}</span>
+                    <br />
+                    <span className="gradient-text">{section.titleAccent}</span>
+                  </h2>
+
+                  <p className="text-base md:text-lg text-[#a0a0c0] leading-relaxed mb-8">
+                    {section.description}
+                  </p>
+
+                  <ul className="space-y-3 mb-8">
+                    {section.bullets.map((b, j) => (
+                      <li key={j} className="flex items-center gap-3">
+                        <div className="w-5 h-5 rounded-full flex items-center justify-center flex-shrink-0" style={{ background: `${section.tagColor}20` }}>
+                          <CheckCircle2 size={12} color={section.tagColor} />
+                        </div>
+                        <span className="text-sm md:text-base text-[#a0a0c0]">{b}</span>
+                      </li>
+                    ))}
+                  </ul>
+
+                  <Link href={section.href} className="btn-primary no-underline text-sm md:text-base px-6 py-3 inline-flex">
+                    Explore {section.tag} <ArrowRight size={16} />
+                  </Link>
+                </motion.div>
+
+                {/* Mockup */}
+                <motion.div
+                  className="flex-1 flex items-center justify-center"
+                  initial={{ opacity: 0, x: isReversed ? -40 : 40 }}
+                  whileInView={{ opacity: 1, x: 0 }}
+                  viewport={{ once: true, margin: '-100px' }}
+                  transition={{ duration: 0.6, delay: 0.15 }}
+                >
+                  <Mockup />
+                </motion.div>
+              </div>
+            </section>
+          )
+        })}
+
+        {/* ══════════════════════════════════════════════
+            HOW IT WORKS
+        ══════════════════════════════════════════════ */}
+        <section className="relative py-28 md:py-36 px-6 md:px-12" style={{ borderTop: '1px solid var(--border-color)' }}>
+          <div className="w-full max-w-[1200px] mx-auto">
+            <motion.div
+              className="text-center mb-20"
+              initial={{ opacity: 0, y: 20 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }}
+              transition={{ duration: 0.5 }}
+            >
+              <h2 className="font-display text-4xl md:text-5xl font-extrabold mb-4">
+                <span className="gradient-text">How It Works</span>
+              </h2>
+              <p className="text-lg text-[#6a6a8a]">Three lines of defence, fully digitised</p>
+            </motion.div>
+
+            <div className="relative">
+              {/* Connecting line */}
+              <div className="hidden lg:block absolute top-[44px] left-[calc(16.67%+28px)] right-[calc(16.67%+28px)] h-px" style={{ background: 'linear-gradient(90deg, #4ab0de, #8b5cf6, #10b981)' }} />
+
+              <div className="grid grid-cols-1 lg:grid-cols-3 gap-10">
+                {steps.map((step, idx) => (
+                  <motion.div
+                    key={idx}
+                    initial={{ opacity: 0, y: 30 }}
+                    whileInView={{ opacity: 1, y: 0 }}
+                    viewport={{ once: true }}
+                    transition={{ duration: 0.5, delay: idx * 0.15 }}
+                  >
+                    <Link href={step.href} className="no-underline group block text-center">
+                      <div className="relative mx-auto mb-6 w-[64px] h-[64px]">
+                        <div className="absolute inset-0 rounded-full animate-border-glow" style={{ border: `2px solid ${step.color}30`, background: `${step.color}08` }} />
+                        <div className="absolute inset-0 rounded-full flex items-center justify-center">
+                          <step.icon size={24} color={step.color} />
+                        </div>
+                      </div>
+                      <span className="text-xs font-bold tracking-widest" style={{ color: step.color }}>{step.num}</span>
+                      <h3 className="text-xl font-bold text-white mt-3 mb-2 font-display group-hover:text-[#4ab0de] transition-colors">{step.title}</h3>
+                      <p className="text-sm font-semibold mb-4" style={{ color: step.color }}>{step.subtitle}</p>
+                      <p className="text-sm text-[#6a6a8a] leading-relaxed max-w-[300px] mx-auto">{step.desc}</p>
+                    </Link>
+                  </motion.div>
+                ))}
+              </div>
+            </div>
+          </div>
+        </section>
+
+        {/* ══════════════════════════════════════════════
+            CTA
+        ══════════════════════════════════════════════ */}
+        <section className="relative py-28 md:py-36 px-6 md:px-12 dot-grid" style={{ borderTop: '1px solid var(--border-color)' }}>
+          <motion.div
+            className="w-full max-w-3xl mx-auto text-center"
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            transition={{ duration: 0.5 }}
+          >
+            <h2 className="font-display text-4xl md:text-6xl font-extrabold mb-6 leading-tight">
+              Ready to <span className="gradient-text">manage risk</span>
+              <br />smarter?
+            </h2>
+            <p className="text-lg text-[#6a6a8a] mb-14 max-w-lg mx-auto">
+              Explore the full interactive demo — no sign-up required.
+            </p>
+            <div className="flex flex-wrap items-center justify-center gap-4">
+              <Link href="/business-owner/dashboard" className="btn-primary no-underline text-base px-8 py-4">
+                <Eye size={18} /> Business Owner View
+              </Link>
+              <Link href="/risk-manager/dashboard" className="btn-secondary no-underline text-base px-6 py-4">
+                <BarChart3 size={18} /> Risk Manager View
+              </Link>
+              <Link href="/admin/users" className="btn-secondary no-underline text-base px-6 py-4">
+                <Lock size={18} /> Admin Panel
+              </Link>
+            </div>
+          </motion.div>
+        </section>
+      </main>
+
+      {/* ── Footer ── */}
+      <footer className="px-6 md:px-12 py-6 flex items-center justify-between text-sm text-[#6a6a8a]" style={{ borderTop: '1px solid var(--border-color)', background: 'var(--bg-secondary)' }}>
+        <div className="flex items-center gap-3">
+          <Shield size={16} color="#4ab0de" />
+          <span className="gradient-text font-bold text-base">RiskAI Platform</span>
           <span>— Interactive Demo</span>
         </div>
-        <span>Powered by ChatGPT · {new Date().getFullYear()}</span>
+        <span>{new Date().getFullYear()}</span>
       </footer>
     </div>
   )

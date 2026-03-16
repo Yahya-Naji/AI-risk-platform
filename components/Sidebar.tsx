@@ -1,12 +1,27 @@
 'use client';
 
+import { useEffect, useState } from 'react';
 import Link from 'next/link';
-import { Shield } from 'lucide-react';
+import { usePathname } from 'next/navigation';
+import {
+  Shield,
+  Home,
+  CheckSquare,
+  MessageSquare,
+  ClipboardList,
+  Bot,
+  HelpCircle,
+  BarChart3,
+  Search,
+  Users,
+  FolderOpen,
+  type LucideIcon,
+} from 'lucide-react';
 
 type Role = 'business-owner' | 'risk-manager' | 'admin';
 
 interface NavItem {
-  icon: string;
+  icon: LucideIcon;
   label: string;
   href: string;
   badge?: number;
@@ -19,84 +34,113 @@ interface NavSection {
 
 interface SidebarProps {
   role: Role;
-  activePage: string;
+  activePage?: string;
 }
 
-const navConfig: Record<Role, NavSection[]> = {
-  'business-owner': [
-    {
-      title: 'MY WORK',
-      items: [
-        { icon: '🏠', label: 'My Dashboard', href: '/business-owner/dashboard' },
-        { icon: '✅', label: 'My Tasks', href: '/business-owner/tasks', badge: 6 },
-        { icon: '💬', label: 'Report New Risk', href: '/business-owner/report-risk' },
-      ],
-    },
-    {
-      title: 'HELP',
-      items: [
-        { icon: '❓', label: 'Risk Guidelines', href: '/business-owner/guidelines' },
-        { icon: '💬', label: 'Ask AI Assistant', href: '/business-owner/assistant' },
-      ],
-    },
-  ],
-  'risk-manager': [
-    {
-      title: 'OVERVIEW',
-      items: [
-        { icon: '🏠', label: 'Dashboard', href: '/risk-manager/dashboard' },
-        { icon: '📋', label: 'Risk Registry', href: '/risk-manager/registry', badge: 8 },
-        { icon: '🔍', label: 'Pending Review', href: '/risk-manager/review', badge: 5 },
-      ],
-    },
-    {
-      title: 'ACTIONS',
-      items: [
-        { icon: '✅', label: 'Validate & Assign', href: '/risk-manager/validate/RSK-052' },
-        { icon: '🤖', label: 'AI Risk Review', href: '/risk-manager/review' },
-      ],
-    },
-    {
-      title: 'ADMIN',
-      items: [
-        { icon: '👥', label: 'User Management', href: '/admin/users' },
-      ],
-    },
-  ],
-  'admin': [
-    {
-      title: 'ADMIN',
-      items: [
-        { icon: '👥', label: 'User Management', href: '/admin/users' },
-        { icon: '📊', label: 'All Risks', href: '/risk-manager/registry' },
-        { icon: '🏠', label: 'Overview', href: '/risk-manager/dashboard' },
-      ],
-    },
-  ],
+interface UserData {
+  id: string;
+  name: string;
+  department: string;
+  company: string;
+  group: string;
+  avatar: string;
+  role: string;
+}
+
+const userEmail: Record<Role, string> = {
+  'business-owner': 'sarah.lee@bloomholding.com',
+  'risk-manager': 'ahmed.rashid@bloomholding.com',
+  'admin': 'omar.khalil@bloomholding.com',
 };
 
-const deptLabel: Record<Role, string> = {
-  'business-owner': 'Finance Dept',
-  'risk-manager': 'Risk Management',
-  'admin': 'Administration',
+const roleLabel: Record<string, string> = {
+  BUSINESS_OWNER: 'Business Owner',
+  RISK_MANAGER: 'Risk Manager',
+  ADMIN: 'Administrator',
 };
 
-const userInfo: Record<Role, { initials: string; name: string; role: string }> = {
-  'business-owner': { initials: 'SL', name: 'Sarah Lee', role: 'Finance Lead' },
-  'risk-manager': { initials: 'MR', name: 'Mohammed Al-Rashid', role: 'Senior Risk Manager' },
-  'admin': { initials: 'AD', name: 'Admin User', role: 'System Administrator' },
-};
+export default function Sidebar({ role }: SidebarProps) {
+  const pathname = usePathname();
+  const [user, setUser] = useState<UserData | null>(null);
+  const [taskCount, setTaskCount] = useState(0);
 
-export default function Sidebar({ role, activePage }: SidebarProps) {
+  useEffect(() => {
+    async function loadUser() {
+      try {
+        const res = await fetch(`/api/users?email=${userEmail[role]}`);
+        if (res.ok) {
+          const data = await res.json();
+          setUser(data);
+          if (role === 'business-owner' && data.id) {
+            const taskRes = await fetch(`/api/business-owner/tasks?userId=${data.id}`);
+            if (taskRes.ok) {
+              const tasks = await taskRes.json();
+              setTaskCount(tasks.length);
+            }
+          }
+        }
+      } catch {
+        // Fallback
+      }
+    }
+    loadUser();
+  }, [role]);
+
+  const navConfig: Record<Role, NavSection[]> = {
+    'business-owner': [
+      {
+        title: 'MY WORK',
+        items: [
+          { icon: Home, label: 'My Dashboard', href: '/business-owner/dashboard' },
+          { icon: CheckSquare, label: 'My Tasks', href: '/business-owner/tasks', badge: taskCount || undefined },
+          { icon: MessageSquare, label: 'Report New Risk', href: '/business-owner/report-risk' },
+          { icon: ClipboardList, label: 'My Submitted Risks', href: '/business-owner/submitted-risks' },
+        ],
+      },
+      {
+        title: 'HELP',
+        items: [
+          { icon: Bot, label: 'AI Assistant', href: '/business-owner/assistant' },
+          { icon: HelpCircle, label: 'Risk Guidelines', href: '/business-owner/guidelines' },
+        ],
+      },
+    ],
+    'risk-manager': [
+      {
+        title: 'OVERVIEW',
+        items: [
+          { icon: Home, label: 'Dashboard', href: '/risk-manager/dashboard' },
+          { icon: ClipboardList, label: 'Risk Registry', href: '/risk-manager/registry' },
+          { icon: Search, label: 'Pending Review', href: '/risk-manager/review' },
+        ],
+      },
+      {
+        title: 'ACTIONS',
+        items: [
+          { icon: CheckSquare, label: 'Controls', href: '/risk-manager/registry' },
+          { icon: Bot, label: 'AI Risk Assistant', href: '/risk-manager/assistant' },
+        ],
+      },
+    ],
+    'admin': [
+      {
+        title: 'ADMIN',
+        items: [
+          { icon: Home, label: 'Overview', href: '/admin/overview' },
+          { icon: Users, label: 'User Management', href: '/admin/users' },
+          { icon: BarChart3, label: 'All Risks', href: '/risk-manager/registry' },
+        ],
+      },
+    ],
+  };
+
   const sections = navConfig[role];
-  const dept = deptLabel[role];
-  const user = userInfo[role];
 
   return (
     <aside
       style={{
-        width: '260px',
-        minWidth: '260px',
+        width: '240px',
+        minWidth: '240px',
         height: '100vh',
         overflowY: 'auto',
         background: 'var(--bg-secondary)',
@@ -109,17 +153,12 @@ export default function Sidebar({ role, activePage }: SidebarProps) {
       }}
     >
       {/* Logo */}
-      <div
-        style={{
-          padding: '24px 20px 16px',
-          borderBottom: '1px solid var(--border-color)',
-        }}
-      >
-        <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '4px' }}>
+      <div style={{ padding: '20px 16px 14px', borderBottom: '1px solid var(--border-color)' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
           <div
             style={{
-              width: '36px',
-              height: '36px',
+              width: '34px',
+              height: '34px',
               borderRadius: '10px',
               background: 'linear-gradient(135deg, #4ab0de 0%, #8b5cf6 100%)',
               display: 'flex',
@@ -128,30 +167,25 @@ export default function Sidebar({ role, activePage }: SidebarProps) {
               flexShrink: 0,
             }}
           >
-            <Shield size={20} color="#fff" />
+            <Shield size={18} color="#fff" />
           </div>
           <div>
-            <div
-              style={{
-                fontSize: '20px',
-                fontWeight: 700,
-                lineHeight: 1.1,
-              }}
-            >
-              <span className="gradient-text">RiskAI</span>
+            <div style={{ fontSize: '16px', fontWeight: 700, lineHeight: 1.1 }}>
+              <span className="gradient-text">RiskAI</span>{' '}
+              <span style={{ color: 'var(--text-secondary)', fontWeight: 400, fontSize: '14px' }}>Platform</span>
             </div>
-            <div style={{ fontSize: '11px', color: 'var(--text-muted)', marginTop: '1px' }}>
-              Platform
+            <div style={{ fontSize: '10px', color: 'var(--text-muted)', marginTop: '2px' }}>
+              {user?.group || 'National Holding Group'}
             </div>
           </div>
         </div>
       </div>
 
-      {/* Dept Badge */}
-      <div style={{ padding: '14px 20px', borderBottom: '1px solid var(--border-color)' }}>
+      {/* Department Badge */}
+      <div style={{ padding: '12px 16px', borderBottom: '1px solid var(--border-color)' }}>
         <div
           style={{
-            padding: '10px 14px',
+            padding: '10px 12px',
             borderRadius: '10px',
             background: 'rgba(74,176,222,0.06)',
             border: '1px solid transparent',
@@ -161,19 +195,20 @@ export default function Sidebar({ role, activePage }: SidebarProps) {
             backgroundClip: 'padding-box, border-box',
           }}
         >
-          <div style={{ fontSize: '10px', color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.5px', marginBottom: '2px' }}>
-            Department
+          <div style={{ fontSize: '9px', color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.5px', marginBottom: '2px' }}>
+            YOUR DEPARTMENT
           </div>
-          <div style={{ fontSize: '13px', fontWeight: 600, color: 'var(--text-primary)' }}>
-            {dept}
+          <div style={{ fontSize: '13px', fontWeight: 600, color: 'var(--text-primary)', display: 'flex', alignItems: 'center', gap: '6px' }}>
+            <FolderOpen size={14} style={{ opacity: 0.7 }} />
+            {user?.department || 'Loading...'}
           </div>
         </div>
       </div>
 
-      {/* Nav Sections */}
-      <nav style={{ flex: 1, padding: '12px 12px' }}>
+      {/* Navigation */}
+      <nav style={{ flex: 1, padding: '10px 10px' }}>
         {sections.map((section) => (
-          <div key={section.title} style={{ marginBottom: '20px' }}>
+          <div key={section.title} style={{ marginBottom: '18px' }}>
             <div
               style={{
                 fontSize: '10px',
@@ -181,33 +216,29 @@ export default function Sidebar({ role, activePage }: SidebarProps) {
                 color: 'var(--text-muted)',
                 letterSpacing: '0.8px',
                 textTransform: 'uppercase',
-                padding: '4px 8px 8px',
+                padding: '4px 8px 6px',
               }}
             >
               {section.title}
             </div>
             {section.items.map((item) => {
-              const isActive = activePage === item.label.toLowerCase().replace(/\s+/g, '-') ||
-                activePage === item.href.split('/').pop();
+              const isActive = pathname === item.href || pathname?.startsWith(item.href + '/');
+              const Icon = item.icon;
 
               return (
-                <Link
-                  key={item.href}
-                  href={item.href}
-                  style={{ textDecoration: 'none' }}
-                >
+                <Link key={item.href} href={item.href} style={{ textDecoration: 'none' }}>
                   <div
                     className={isActive ? 'nav-active' : ''}
                     style={{
                       display: 'flex',
                       alignItems: 'center',
                       gap: '10px',
-                      padding: '9px 8px 9px 10px',
+                      padding: '8px 8px 8px 10px',
                       borderRadius: '8px',
                       marginBottom: '2px',
                       cursor: 'pointer',
                       color: isActive ? undefined : 'var(--text-secondary)',
-                      fontSize: '13.5px',
+                      fontSize: '13px',
                       fontWeight: isActive ? 600 : 400,
                       transition: 'background 0.2s, color 0.2s',
                       borderLeft: isActive ? undefined : '3px solid transparent',
@@ -225,7 +256,7 @@ export default function Sidebar({ role, activePage }: SidebarProps) {
                       }
                     }}
                   >
-                    <span style={{ fontSize: '15px', lineHeight: 1 }}>{item.icon}</span>
+                    <Icon size={16} style={{ flexShrink: 0, opacity: 0.85 }} />
                     <span style={{ flex: 1 }}>{item.label}</span>
                     {item.badge !== undefined && (
                       <span
@@ -234,7 +265,7 @@ export default function Sidebar({ role, activePage }: SidebarProps) {
                           color: '#fff',
                           fontSize: '10px',
                           fontWeight: 700,
-                          padding: '2px 7px',
+                          padding: '1px 6px',
                           borderRadius: '10px',
                           lineHeight: 1.4,
                         }}
@@ -253,44 +284,37 @@ export default function Sidebar({ role, activePage }: SidebarProps) {
       {/* User Footer */}
       <div
         style={{
-          padding: '14px 16px',
+          padding: '12px 14px',
           borderTop: '1px solid var(--border-color)',
           display: 'flex',
           alignItems: 'center',
-          gap: '12px',
+          gap: '10px',
         }}
       >
         <div
           style={{
-            width: '36px',
-            height: '36px',
+            width: '34px',
+            height: '34px',
             borderRadius: '50%',
             background: 'linear-gradient(135deg, #4ab0de 0%, #8b5cf6 100%)',
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',
-            fontSize: '13px',
+            fontSize: '12px',
             fontWeight: 700,
             color: '#fff',
             flexShrink: 0,
           }}
         >
-          {user.initials}
+          {user?.avatar || '..'}
         </div>
         <div style={{ minWidth: 0 }}>
-          <div
-            style={{
-              fontSize: '13px',
-              fontWeight: 600,
-              color: 'var(--text-primary)',
-              whiteSpace: 'nowrap',
-              overflow: 'hidden',
-              textOverflow: 'ellipsis',
-            }}
-          >
-            {user.name}
+          <div style={{ fontSize: '12px', fontWeight: 600, color: 'var(--text-primary)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+            {user?.name || 'Loading...'}
           </div>
-          <div style={{ fontSize: '11px', color: 'var(--text-muted)' }}>{user.role}</div>
+          <div style={{ fontSize: '10px', color: 'var(--text-muted)' }}>
+            {user?.role ? roleLabel[user.role] || user.role : ''}
+          </div>
         </div>
       </div>
     </aside>

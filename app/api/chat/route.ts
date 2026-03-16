@@ -1,76 +1,174 @@
-import { NextRequest, NextResponse } from 'next/server'
-import OpenAI from 'openai'
+import { NextResponse } from "next/server";
+import { prisma } from "@/lib/db";
+import OpenAI from "openai";
 
-const openai = new OpenAI({
-  apiKey: process.env.OPENAI_API_KEY,
-})
+const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
 
-const SYSTEM_PROMPTS: Record<string, string> = {
-  'risk-copilot': `You are an AI Risk Copilot for an enterprise risk management platform. Your role is to help business owners identify and document risks in a structured way.
+const SYSTEM_PROMPT = `You are **RiskAI Copilot**, the AI-powered risk identification assistant for the RiskAI Enterprise Risk Management Platform — built for National Holding Group / Bloom Holding, a major UAE-based conglomerate.
 
-When a user describes a concern, respond in 2-3 sentences acknowledging their concern, then provide a brief structured risk assessment. Keep responses concise and practical.
+## Your Role
+You help **Business Owners** (department heads, project leads) identify, articulate, and assess risks associated with their projects, initiatives, operations, or concerns. You act as a knowledgeable risk advisor who combines deep expertise in enterprise risk management frameworks (ISO 31000, COSO ERM) with practical UAE business context.
 
-After identifying the risk, suggest:
-- The risk category (Financial/Operational/Technology/Compliance)
-- A likelihood score (1-5) and impact score (1-5)
-- 2-3 relevant controls (Directive/Preventive/Detective/Corrective)
+## Platform Context
+- **Organization**: National Holding Group / Bloom Holding — a diversified UAE conglomerate with operations across real estate, hospitality, industrial, healthcare, and financial services.
+- **Regulatory Environment**: UAE federal laws, ADGM/DIFC regulations, UAE Central Bank guidelines, ESCA regulations, UAE Labour Law, VAT/tax compliance, data protection (PDPL), ESG/sustainability mandates.
+- **Workflow**: Business Owner reports risks → Risk Manager validates & assigns controls/tasks → Business Owner completes tasks with evidence → Audit trail maintained.
+- **Risk Categories**: OPERATIONAL, COMPLIANCE, FINANCIAL, STRATEGIC, HR_TALENT, IT_CYBER
 
-Always mention source attribution like [SEC Guidelines], [ISO 31000], or [Risk Library] for credibility.
-Format your response conversationally, not as bullet points.`,
+## How to Interact
+1. **Be conversational and professional** — greet the user, ask clarifying questions if their description is vague, and guide them to provide enough detail.
+2. **When the user describes a situation** (project, initiative, concern, process change, new venture, etc.), analyze it thoroughly and identify **4–6 potential risks** spanning multiple categories.
+3. **Provide rich analysis** — explain WHY each risk matters, what could go wrong, and how it connects to their situation. Use **bold text**, bullet points, and structured formatting in your message.
+4. **If the user asks follow-up questions** or wants to refine, respond helpfully without generating new risks (set risks array to empty).
+5. **Consider UAE-specific factors**: Emiratisation requirements, free zone vs mainland regulations, VAT compliance, MOHRE labor rules, data residency requirements, Central Bank regulations for financial entities, real estate regulations (RERA/DLD), construction safety codes, environmental regulations.
 
-  'review-assistant': `You are an AI Risk Review Assistant helping Risk Managers validate and review submitted risks.
-Provide analysis of risk quality, scoring accuracy, and control appropriateness.
-Keep responses concise and actionable.`,
+## Rating Scale
+- **Likelihood** (1-5): 1=Rare, 2=Unlikely, 3=Possible, 4=Likely, 5=Almost Certain
+- **Impact** (1-5): 1=Negligible, 2=Minor, 3=Moderate, 4=Major, 5=Severe
+- **Risk Score** = Likelihood × Impact → LOW (1-5), MEDIUM (6-11), HIGH (12-19), CRITICAL (20-25)
+
+## Response Format
+You MUST respond with a valid JSON object in this exact format — no markdown code fences, just raw JSON:
+{
+  "message": "Your rich, formatted response using **bold**, bullet points (- item), and clear structure. Use markdown formatting for readability. Break your analysis into sections like:\\n\\n**Analysis Summary**\\nYour overview...\\n\\n**Key Concerns**\\n- Concern 1\\n- Concern 2\\n\\n**Identified Risks**\\nBrief explanation of each risk identified and why it matters.",
+  "risks": [
+    {
+      "title": "Clear, Specific Risk Title",
+      "category": "OPERATIONAL",
+      "description": "2-3 sentence description explaining the risk, its potential consequences, and why it's relevant to this specific situation.",
+      "likelihood": 3,
+      "impact": 4
+    }
+  ]
 }
 
-export async function POST(request: NextRequest) {
+When no new risks are being identified (follow-up chat, clarifications), set "risks" to an empty array [].
+
+## Important Rules
+- Always return valid JSON. No markdown code blocks around the JSON.
+- The "message" field should be rich and informative (use \\n for newlines, **bold** for emphasis, - for bullet points).
+- Each risk must have exactly: title, category, description, likelihood, impact.
+- Categories must be one of: OPERATIONAL, COMPLIANCE, FINANCIAL, STRATEGIC, HR_TALENT, IT_CYBER
+- Likelihood and impact must be integers 1-5.
+- Be specific to the user's situation — never give generic boilerplate risks.
+- If the user's message is a greeting or general question, respond conversationally with an empty risks array.`;
+
+export async function POST(request: Request) {
+  const body = await request.json();
+  const { message, sessionId, userId } = body;
+
+  if (!message || !userId) {
+    return NextResponse.json(
+      { error: "message and userId are required" },
+      { status: 400 }
+    );
+  }
+
+  // Get user info for context
+  const user = await prisma.user.findUnique({
+    where: { id: userId },
+    select: { name: true, department: true, role: true },
+  });
+
+  // Get or create chat session
+  let session;
+  if (sessionId) {
+    session = await prisma.chatSession.findUnique({ where: { id: sessionId } });
+  }
+
+  if (!session) {
+    session = await prisma.chatSession.create({
+      data: {
+        userId,
+        messages: JSON.stringify([]),
+        draftRisks: JSON.stringify([]),
+        step: 1,
+      },
+    });
+  }
+
+  // Build message history
+  const existingMessages = JSON.parse(session.messages as string) as Array<{
+    role: string;
+    content: string;
+  }>;
+
+  // Add user context to the system prompt
+  const contextualPrompt = `${SYSTEM_PROMPT}\n\n## Current User Context\n- **Name**: ${user?.name || "Unknown"}\n- **Department**: ${user?.department || "Unknown"}\n- **Role**: ${user?.role || "BUSINESS_OWNER"}\n\nTailor your risk analysis to their department and role context.`;
+
+  const openaiMessages = [
+    { role: "system" as const, content: contextualPrompt },
+    ...existingMessages.map((m) => ({
+      role: m.role as "user" | "assistant",
+      content: m.content,
+    })),
+    { role: "user" as const, content: message },
+  ];
+
   try {
-    const { message, role = 'risk-copilot', history = [] } = await request.json()
+    const completion = await openai.chat.completions.create({
+      model: "gpt-4o",
+      messages: openaiMessages,
+      temperature: 0.7,
+      max_tokens: 3000,
+    });
 
-    if (!process.env.OPENAI_API_KEY || process.env.OPENAI_API_KEY === 'your-openai-api-key-here') {
-      // Mock response for demo without API key
-      const mockResponses: Record<string, string> = {
-        'vendor': "That's a significant concern! Based on your description, I'm identifying this as a **Vendor Payment Fraud** risk. This falls under Financial > Fraud > External Fraud category [SEC Guidelines]. I'd suggest a Likelihood score of 4/5 and Impact of 4/5, giving an Inherent Risk Score of 16 (HIGH). I recommend the following controls: a Vendor Verification Workflow (Preventive), Dual-Approval Payment Process (Preventive), and Monthly Transaction Reconciliation (Detective) [Risk Library]. Shall I generate the full risk entry?",
-        'access': "Good catch! I'm classifying this as an **Unauthorized System Access** risk under Technology > Security > Access Control [ISO 27001]. With a Likelihood of 3/5 and Impact of 5/5, this has an Inherent Score of 15 (HIGH). Key controls to implement: Role-Based Access Control (Preventive), Multi-Factor Authentication (Preventive), and Access Log Monitoring (Detective) [Risk Library]. Want me to draft the complete risk record?",
-        'default': "I understand your concern. Based on what you've described, this appears to be a significant operational risk [ISO 31000]. I'll structure this as a formal risk entry with appropriate controls. Could you provide a bit more detail about the specific process or system involved? This will help me generate more accurate control recommendations.",
-      }
+    const assistantContent = completion.choices[0]?.message?.content ?? "";
 
-      const lowerMsg = message.toLowerCase()
-      let response = mockResponses['default']
-      if (lowerMsg.includes('vendor') || lowerMsg.includes('payment') || lowerMsg.includes('fraud')) {
-        response = mockResponses['vendor']
-      } else if (lowerMsg.includes('access') || lowerMsg.includes('unauthorized') || lowerMsg.includes('security')) {
-        response = mockResponses['access']
-      }
-
-      return NextResponse.json({ response })
+    // Try to parse structured response
+    let parsedResponse: { message: string; risks: Array<Record<string, unknown>> };
+    try {
+      // Strip any markdown code fences if the model wraps them
+      const cleaned = assistantContent
+        .replace(/^```json\s*/i, "")
+        .replace(/^```\s*/i, "")
+        .replace(/\s*```$/i, "")
+        .trim();
+      parsedResponse = JSON.parse(cleaned);
+    } catch {
+      // If JSON parsing fails, treat the whole response as a message
+      parsedResponse = { message: assistantContent, risks: [] };
     }
 
-    const systemPrompt = SYSTEM_PROMPTS[role] || SYSTEM_PROMPTS['risk-copilot']
+    const now = new Date().toISOString();
+    const updatedMessages = [
+      ...existingMessages,
+      { role: "user", content: message, timestamp: now },
+      { role: "assistant", content: parsedResponse.message, timestamp: now },
+    ];
 
-    const messages = [
-      { role: 'system' as const, content: systemPrompt },
-      ...history.map((h: { role: string; content: string }) => ({
-        role: h.role as 'user' | 'assistant',
-        content: h.content,
-      })),
-      { role: 'user' as const, content: message },
-    ]
+    // Update draft risks if AI suggested any
+    let draftRisks = JSON.parse(session.draftRisks as string);
+    if (parsedResponse.risks && parsedResponse.risks.length > 0) {
+      draftRisks = parsedResponse.risks.map((r, i) => ({
+        id: `draft-${Date.now()}-${i}`,
+        ...r,
+        selected: false,
+        aiSuggested: true,
+        aiLikelihood: r.likelihood,
+        aiImpact: r.impact,
+      }));
+    }
 
-    const completion = await openai.chat.completions.create({
-      model: 'gpt-4o-mini',
-      messages,
-      max_tokens: 400,
-      temperature: 0.7,
-    })
+    await prisma.chatSession.update({
+      where: { id: session.id },
+      data: {
+        messages: JSON.stringify(updatedMessages),
+        draftRisks: JSON.stringify(draftRisks),
+      },
+    });
 
-    const response = completion.choices[0]?.message?.content || 'I apologize, I could not generate a response.'
-    return NextResponse.json({ response })
-  } catch (error) {
-    console.error('OpenAI API error:', error)
+    return NextResponse.json({
+      sessionId: session.id,
+      message: parsedResponse.message,
+      risks: draftRisks,
+    });
+  } catch (error: unknown) {
+    const errMsg = error instanceof Error ? error.message : "Unknown error";
+    console.error("OpenAI API error:", errMsg);
     return NextResponse.json(
-      { response: "I'm having trouble connecting to the AI service. Please try again in a moment." },
-      { status: 200 }
-    )
+      { error: "AI service temporarily unavailable. Please try again." },
+      { status: 500 }
+    );
   }
 }
