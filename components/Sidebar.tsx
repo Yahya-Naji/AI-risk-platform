@@ -18,7 +18,7 @@ import {
   type LucideIcon,
 } from 'lucide-react';
 
-type Role = 'business-owner' | 'risk-manager' | 'admin';
+type Role = 'business-owner' | 'risk-manager' | 'admin' | 'chief-risk-manager' | 'executive';
 
 interface NavItem {
   icon: LucideIcon;
@@ -51,11 +51,15 @@ const userEmail: Record<Role, string> = {
   'business-owner': 'sarah.lee@bloomholding.com',
   'risk-manager': 'ahmed.rashid@bloomholding.com',
   'admin': 'omar.khalil@bloomholding.com',
+  'chief-risk-manager': 'omar.khalil@bloomholding.com',
+  'executive': 'hasan.qazi@bloomholding.com',
 };
 
 const roleLabel: Record<string, string> = {
   BUSINESS_OWNER: 'Business Owner',
   RISK_MANAGER: 'Risk Manager',
+  CHIEF_RISK_MANAGER: 'Chief Risk Manager',
+  EXECUTIVE: 'Executive Board',
   ADMIN: 'Administrator',
 };
 
@@ -129,6 +133,32 @@ export default function Sidebar({ role }: SidebarProps) {
           { icon: Home, label: 'Overview', href: '/admin/overview' },
           { icon: Users, label: 'User Management', href: '/admin/users' },
           { icon: BarChart3, label: 'All Risks', href: '/risk-manager/registry' },
+        ],
+      },
+    ],
+    'chief-risk-manager': [
+      {
+        title: 'OVERVIEW',
+        items: [
+          { icon: Home, label: 'Dashboard', href: '/chief-risk-manager/dashboard' },
+          { icon: Users, label: 'User Management', href: '/chief-risk-manager/users' },
+          { icon: ClipboardList, label: 'Risk Registry', href: '/risk-manager/registry' },
+          { icon: Search, label: 'Pending Review', href: '/risk-manager/review' },
+        ],
+      },
+      {
+        title: 'TOOLS',
+        items: [
+          { icon: Bot, label: 'AI Risk Assistant', href: '/risk-manager/assistant' },
+        ],
+      },
+    ],
+    'executive': [
+      {
+        title: 'BOARD',
+        items: [
+          { icon: Home, label: 'Board Dashboard', href: '/executive/dashboard' },
+          { icon: BarChart3, label: 'Risk Portfolio', href: '/risk-manager/registry' },
         ],
       },
     ],

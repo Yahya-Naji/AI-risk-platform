@@ -1,10 +1,18 @@
-import { NextResponse } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/db";
 
-export async function GET() {
+export async function GET(req: NextRequest) {
+  const { searchParams } = new URL(req.url);
+  const department = searchParams.get("department");
+  const company = searchParams.get("company");
+
+  const riskWhere: Record<string, unknown> = { status: { not: "DRAFT" } };
+  if (department) riskWhere.department = department;
+  if (company) riskWhere.reportedBy = { company };
+
   // All risks (exclude DRAFT)
   const risks = await prisma.risk.findMany({
-    where: { status: { not: "DRAFT" } },
+    where: riskWhere,
     include: {
       reportedBy: { select: { id: true, name: true, avatar: true, department: true } },
       assignedTo: { select: { id: true, name: true, avatar: true } },
@@ -15,6 +23,15 @@ export async function GET() {
     },
     orderBy: { createdAt: "desc" },
   });
+
+  // Get org filter options
+  const users = await prisma.user.findMany({
+    select: { company: true, department: true },
+  });
+  const orgFilters = {
+    companies: [...new Set(users.map((u) => u.company))].sort(),
+    departments: [...new Set(users.map((u) => u.department))].sort(),
+  };
 
   const controls = await prisma.control.findMany({
     select: { id: true, adequacy: true, effectivenessRating: true, type: true },
@@ -126,6 +143,7 @@ export async function GET() {
   const overdueTasks = tasks.filter((t) => t.isOverdue || (t.dueDate && new Date(t.dueDate) < new Date() && t.status !== "COMPLETED")).length;
 
   return NextResponse.json({
+    orgFilters,
     stats: { totalRisks, highResidual, inadequateControls, pendingReview, mitigated },
     fraudRisks: { total: fraudRisks.length, byCategory: fraudByCategory },
     heatMap,

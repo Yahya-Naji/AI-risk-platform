@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import Sidebar from '@/components/Sidebar';
 import {
@@ -14,10 +14,14 @@ import {
   Zap,
   TrendingUp,
   Lightbulb,
+  Building2,
+  X,
+  ChevronRight,
   type LucideIcon,
 } from 'lucide-react';
 
 interface DashboardData {
+  orgFilters?: { companies: string[]; departments: string[] };
   stats: { totalRisks: number; highResidual: number; inadequateControls: number; pendingReview: number; mitigated: number };
   fraudRisks: { total: number; byCategory: Record<string, number> };
   heatMap: number[][];
@@ -80,26 +84,36 @@ export default function RiskManagerDashboard() {
   const [loading, setLoading] = useState(true);
   const [user, setUser] = useState<{ name: string; avatar: string } | null>(null);
   const [selectedCell, setSelectedCell] = useState<string | null>(null);
+  const [filterCompany, setFilterCompany] = useState('');
+  const [filterDept, setFilterDept] = useState('');
+  const [highlight, setHighlight] = useState<string | null>(null);
+  const toggleHighlight = (val: string) => setHighlight((prev) => prev === val ? null : val);
 
-  useEffect(() => {
-    async function load() {
-      try {
-        const [dashRes, userRes, risksRes] = await Promise.all([
-          fetch('/api/risk-manager/dashboard'),
-          fetch('/api/users?email=ahmed.rashid@bloomholding.com'),
-          fetch('/api/risks?status=SUBMITTED'),
-        ]);
-        const dashData = await dashRes.json();
-        const userData = await userRes.json();
-        const pendingData = await risksRes.json();
-        setData(dashData);
-        setUser(userData);
-        setPending(Array.isArray(pendingData) ? pendingData : []);
-      } catch (e) { console.error(e); }
-      finally { setLoading(false); }
-    }
-    load();
-  }, []);
+  const fetchData = useCallback(async () => {
+    setLoading(true);
+    try {
+      const params = new URLSearchParams();
+      if (filterCompany) params.set('company', filterCompany);
+      if (filterDept) params.set('department', filterDept);
+      const [dashRes, userRes, risksRes] = await Promise.all([
+        fetch(`/api/risk-manager/dashboard?${params}`),
+        fetch('/api/users?email=ahmed.rashid@bloomholding.com'),
+        fetch('/api/risks?status=SUBMITTED'),
+      ]);
+      const dashData = await dashRes.json();
+      const userData = await userRes.json();
+      const pendingData = await risksRes.json();
+      setData(dashData);
+      setUser(userData);
+      setPending(Array.isArray(pendingData) ? pendingData : []);
+    } catch (e) { console.error(e); }
+    finally { setLoading(false); }
+  }, [filterCompany, filterDept]);
+
+  useEffect(() => { fetchData(); }, [fetchData]);
+
+  const clearFilters = () => { setFilterCompany(''); setFilterDept(''); };
+  const hasFilters = filterCompany || filterDept;
 
   if (loading || !data) {
     return (
@@ -130,12 +144,12 @@ export default function RiskManagerDashboard() {
     notAssessed: Math.round((controlAdequacy.notAssessed / ctrlTotal) * 100),
   };
 
-  const statCards: { label: string; value: number; Icon: LucideIcon; color: string; bg: string; badge?: string }[] = [
-    { label: 'Total Risks', value: stats.totalRisks, Icon: BarChart3, color: '#4ab0de', bg: 'rgba(74,176,222,0.1)' },
-    { label: 'High Residual', value: stats.highResidual, Icon: ShieldAlert, color: '#ef4444', bg: 'rgba(239,68,68,0.1)' },
-    { label: 'Inadequate Controls', value: stats.inadequateControls, Icon: AlertTriangle, color: '#f59e0b', bg: 'rgba(245,158,11,0.1)' },
-    { label: 'Pending Review', value: stats.pendingReview, Icon: Clock, color: '#8b5cf6', bg: 'rgba(139,92,246,0.1)' },
-    { label: 'Mitigated', value: stats.mitigated, Icon: CheckCircle, color: '#10b981', bg: 'rgba(16,185,129,0.1)' },
+  const statCards: { label: string; value: number; Icon: LucideIcon; color: string; bg: string; filter: string }[] = [
+    { label: 'Total Risks', value: stats.totalRisks, Icon: BarChart3, color: '#4ab0de', bg: 'rgba(74,176,222,0.1)', filter: 'all' },
+    { label: 'High Residual', value: stats.highResidual, Icon: ShieldAlert, color: '#ef4444', bg: 'rgba(239,68,68,0.1)', filter: 'high' },
+    { label: 'Inadequate Controls', value: stats.inadequateControls, Icon: AlertTriangle, color: '#f59e0b', bg: 'rgba(245,158,11,0.1)', filter: 'inadequate' },
+    { label: 'Pending Review', value: stats.pendingReview, Icon: Clock, color: '#8b5cf6', bg: 'rgba(139,92,246,0.1)', filter: 'pending' },
+    { label: 'Mitigated', value: stats.mitigated, Icon: CheckCircle, color: '#10b981', bg: 'rgba(16,185,129,0.1)', filter: 'mitigated' },
   ];
 
   return (
@@ -173,6 +187,48 @@ export default function RiskManagerDashboard() {
           </div>
         </div>
 
+        {/* Org Scope Filter */}
+        {data.orgFilters && (
+          <div className="animate-fade-up-1 risk-card" style={{ padding: '14px 20px' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '10px' }}>
+              <span style={{ fontSize: '13px', fontWeight: 600, display: 'flex', alignItems: 'center', gap: '8px' }}>
+                <Building2 size={14} style={{ color: '#4ab0de' }} /> Scope Filter
+              </span>
+              {hasFilters && (
+                <button onClick={clearFilters} style={{ padding: '4px 10px', background: 'rgba(239,68,68,0.1)', border: '1px solid rgba(239,68,68,0.3)', borderRadius: '6px', fontSize: '11px', color: '#ef4444', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '4px' }}>
+                  <X size={10} /> Clear
+                </button>
+              )}
+            </div>
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
+              <div>
+                <div style={{ fontSize: '10px', textTransform: 'uppercase', color: 'var(--text-muted)', marginBottom: '4px', fontWeight: 600 }}>Company</div>
+                <select value={filterCompany} onChange={(e) => { setFilterCompany(e.target.value); setFilterDept(''); }}
+                  style={{ width: '100%', padding: '9px 12px', background: 'var(--bg-secondary)', border: '1px solid var(--border-color)', borderRadius: '8px', fontSize: '12px', color: 'var(--text-primary)', cursor: 'pointer', outline: 'none' }}>
+                  <option value="">All Companies</option>
+                  {data.orgFilters.companies.map((c) => <option key={c} value={c}>{c}</option>)}
+                </select>
+              </div>
+              <div>
+                <div style={{ fontSize: '10px', textTransform: 'uppercase', color: 'var(--text-muted)', marginBottom: '4px', fontWeight: 600 }}>Department</div>
+                <select value={filterDept} onChange={(e) => setFilterDept(e.target.value)}
+                  style={{ width: '100%', padding: '9px 12px', background: 'var(--bg-secondary)', border: '1px solid var(--border-color)', borderRadius: '8px', fontSize: '12px', color: 'var(--text-primary)', cursor: 'pointer', outline: 'none' }}>
+                  <option value="">All Departments</option>
+                  {data.orgFilters.departments.map((d) => <option key={d} value={d}>{d}</option>)}
+                </select>
+              </div>
+            </div>
+            {hasFilters && (
+              <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginTop: '8px', paddingTop: '8px', borderTop: '1px solid var(--border-color)' }}>
+                <span style={{ fontSize: '11px', color: 'var(--text-muted)' }}>Viewing:</span>
+                {filterCompany && <span style={{ padding: '3px 8px', background: 'rgba(139,92,246,0.1)', borderRadius: '4px', fontSize: '11px', color: '#8b5cf6' }}>{filterCompany}</span>}
+                {filterCompany && filterDept && <ChevronRight size={10} style={{ color: 'var(--text-muted)' }} />}
+                {filterDept && <span style={{ padding: '3px 8px', background: 'rgba(245,158,11,0.1)', borderRadius: '4px', fontSize: '11px', color: '#f59e0b' }}>{filterDept}</span>}
+              </div>
+            )}
+          </div>
+        )}
+
         {/* Pending Review Banner */}
         {pending.length > 0 && (
           <div className="animate-fade-up-1" style={{
@@ -201,8 +257,18 @@ export default function RiskManagerDashboard() {
         <div className="animate-fade-up-1" style={{ display: 'grid', gridTemplateColumns: 'repeat(5, 1fr)', gap: '12px' }}>
           {statCards.map((s) => {
             const Icon = s.Icon;
+            const isActive = highlight === s.filter;
             return (
-              <div key={s.label} className="risk-card" style={{ padding: '18px', display: 'flex', alignItems: 'center', gap: '14px' }}>
+              <div key={s.label} className="risk-card"
+                onClick={() => toggleHighlight(s.filter)}
+                style={{
+                  padding: '18px', display: 'flex', alignItems: 'center', gap: '14px', cursor: 'pointer', transition: 'all 0.2s',
+                  borderColor: isActive ? s.color : undefined,
+                  boxShadow: isActive ? `0 0 20px ${s.color}25` : undefined,
+                }}
+                onMouseEnter={(e) => { (e.currentTarget as HTMLDivElement).style.transform = 'translateY(-2px)'; (e.currentTarget as HTMLDivElement).style.borderColor = s.color; }}
+                onMouseLeave={(e) => { (e.currentTarget as HTMLDivElement).style.transform = 'none'; if (!isActive) (e.currentTarget as HTMLDivElement).style.borderColor = 'var(--border-color)'; }}
+              >
                 <div style={{ width: '42px', height: '42px', borderRadius: '10px', background: s.bg, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
                   <Icon size={20} style={{ color: s.color }} />
                 </div>
@@ -514,7 +580,14 @@ export default function RiskManagerDashboard() {
                   </tr>
                 </thead>
                 <tbody>
-                  {recentHighPriority.map((risk) => (
+                  {recentHighPriority.filter((risk) => {
+                    if (!highlight || highlight === 'all') return true;
+                    if (highlight === 'high') return risk.riskLevel === 'HIGH' || risk.riskLevel === 'CRITICAL';
+                    if (highlight === 'pending') return risk.status === 'SUBMITTED' || risk.status === 'IN_REVIEW';
+                    if (highlight === 'mitigated') return risk.status === 'MITIGATED';
+                    if (highlight === 'inadequate') return risk.controlAdequacy !== 'Effective';
+                    return true;
+                  }).map((risk) => (
                     <tr key={risk.id} style={{ borderBottom: '1px solid var(--border-color)' }}>
                       <td style={{ padding: '10px 12px' }}>
                         <span style={{ color: 'var(--accent-cyan)', fontWeight: 600 }}>{risk.riskId}</span>
@@ -585,6 +658,19 @@ export default function RiskManagerDashboard() {
           </div>
         </div>
       </main>
+
+      {/* Highlight filter indicator */}
+      {highlight && highlight !== 'all' && (
+        <div style={{ position: 'fixed', bottom: '24px', left: '50%', transform: 'translateX(-50%)', zIndex: 1000, display: 'flex', alignItems: 'center', gap: '10px', padding: '10px 20px', background: 'var(--bg-card)', border: '1px solid var(--accent-cyan)', borderRadius: '12px', boxShadow: '0 8px 32px rgba(0,0,0,0.5)' }}>
+          <BarChart3 size={14} style={{ color: '#4ab0de' }} />
+          <span style={{ fontSize: '13px', color: 'var(--text-primary)' }}>
+            Filtering: <strong style={{ color: '#4ab0de' }}>{statCards.find((s) => s.filter === highlight)?.label || highlight}</strong>
+          </span>
+          <button onClick={() => setHighlight(null)} style={{ background: 'rgba(239,68,68,0.15)', border: 'none', borderRadius: '6px', padding: '4px 8px', cursor: 'pointer', color: '#ef4444', fontSize: '11px', fontWeight: 600, display: 'flex', alignItems: 'center', gap: '4px' }}>
+            <X size={12} /> Clear
+          </button>
+        </div>
+      )}
     </div>
   );
 }

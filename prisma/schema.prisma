@@ -11,6 +11,8 @@ datasource db {
 enum Role {
   BUSINESS_OWNER
   RISK_MANAGER
+  CHIEF_RISK_MANAGER
+  EXECUTIVE
   ADMIN
 }
 

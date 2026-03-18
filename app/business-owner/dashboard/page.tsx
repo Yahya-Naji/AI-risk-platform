@@ -223,12 +223,21 @@ export default function BusinessOwnerDashboard() {
         {/* Stats Grid */}
         <div className="animate-fade-up-2" style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '14px' }}>
           {[
-            { label: 'Total Tasks', value: stats.totalTasks, Icon: CheckCircle, color: '#4ab0de', bg: 'rgba(74,176,222,0.1)' },
-            { label: 'Overdue', value: stats.overdue, Icon: AlertCircle, color: '#ef4444', bg: 'rgba(239,68,68,0.12)' },
-            { label: 'Changes Requested', value: stats.changesRequested, Icon: RefreshCw, color: '#f59e0b', bg: 'rgba(245,158,11,0.1)' },
-            { label: 'Completed', value: stats.completed + stats.submitted, Icon: CircleCheck, color: '#10b981', bg: 'rgba(16,185,129,0.1)' },
+            { label: 'Total Tasks', value: stats.totalTasks, Icon: CheckCircle, color: '#4ab0de', bg: 'rgba(74,176,222,0.1)', tab: 'all' as TabKey },
+            { label: 'Overdue', value: stats.overdue, Icon: AlertCircle, color: '#ef4444', bg: 'rgba(239,68,68,0.12)', tab: 'overdue' as TabKey },
+            { label: 'Changes Requested', value: stats.changesRequested, Icon: RefreshCw, color: '#f59e0b', bg: 'rgba(245,158,11,0.1)', tab: 'changes' as TabKey },
+            { label: 'Completed', value: stats.completed + stats.submitted, Icon: CircleCheck, color: '#10b981', bg: 'rgba(16,185,129,0.1)', tab: 'completed' as TabKey },
           ].map((stat) => (
-            <div key={stat.label} className="risk-card" style={{ padding: '18px', display: 'flex', alignItems: 'center', gap: '14px' }}>
+            <div key={stat.label} className="risk-card"
+              onClick={() => setActiveTab(stat.tab)}
+              style={{
+                padding: '18px', display: 'flex', alignItems: 'center', gap: '14px', cursor: 'pointer', transition: 'all 0.2s',
+                borderColor: activeTab === stat.tab ? stat.color : undefined,
+                boxShadow: activeTab === stat.tab ? `0 0 20px ${stat.color}25` : undefined,
+              }}
+              onMouseEnter={(e) => { (e.currentTarget as HTMLDivElement).style.transform = 'translateY(-2px)'; (e.currentTarget as HTMLDivElement).style.borderColor = stat.color; }}
+              onMouseLeave={(e) => { (e.currentTarget as HTMLDivElement).style.transform = 'none'; if (activeTab !== stat.tab) (e.currentTarget as HTMLDivElement).style.borderColor = 'var(--border-color)'; }}
+            >
               <div
                 style={{
                   width: '42px', height: '42px', borderRadius: '12px', background: stat.bg,

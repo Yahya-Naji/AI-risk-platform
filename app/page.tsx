@@ -308,7 +308,8 @@ const featureMockups: Record<string, React.FC> = {
 const steps = [
   { num: '01', title: 'Business Owner', subtitle: 'Identifies Risk', desc: 'Uses AI copilot to describe a concern. The platform structures it into a formal risk entry with proposed controls and tasks.', color: '#4ab0de', href: '/business-owner/dashboard', icon: MessageSquare },
   { num: '02', title: 'Risk Manager', subtitle: 'Validates & Assigns', desc: 'Reviews AI-generated risks, validates details, accepts or modifies controls, assigns owners, and creates remediation tasks.', color: '#8b5cf6', href: '/risk-manager/dashboard', icon: GitBranch },
-  { num: '03', title: 'Audit / 3rd Line', subtitle: 'Enforces & Closes', desc: 'Reviews evidence, approves remediation, enforces follow-ups, and formally closes the risk loop.', color: '#10b981', href: '/risk-manager/review', icon: CheckCircle2 },
+  { num: '03', title: 'Chief Risk Manager', subtitle: 'Oversees & Manages', desc: 'Manages risk managers, monitors performance, oversees enterprise-wide risk posture, and ensures controls are effective across all departments.', color: '#f59e0b', href: '/chief-risk-manager/dashboard', icon: Shield },
+  { num: '04', title: 'Executive Board', subtitle: 'Strategic Oversight', desc: 'Views enterprise risk dashboard with org hierarchy filters, heat maps, fraud analysis, and AI-powered board insights for strategic decision-making.', color: '#10b981', href: '/executive/dashboard', icon: CheckCircle2 },
 ]
 
 /* ─── Main Page ─── */
@@ -344,8 +345,11 @@ export default function LandingPage() {
             <Link href="/risk-manager/dashboard" className="px-4 py-2 rounded-lg text-sm font-medium text-white/70 hover:text-white hover:bg-white/10 transition-all no-underline">
               Risk Manager
             </Link>
-            <Link href="/admin/users" className="px-5 py-2.5 rounded-lg text-sm font-medium text-white bg-white/15 backdrop-blur-md hover:bg-white/25 border border-white/20 transition-all no-underline">
-              Admin Panel
+            <Link href="/chief-risk-manager/dashboard" className="px-4 py-2 rounded-lg text-sm font-medium text-white/70 hover:text-white hover:bg-white/10 transition-all no-underline">
+              Chief RM
+            </Link>
+            <Link href="/executive/dashboard" className="px-5 py-2.5 rounded-lg text-sm font-medium text-white bg-white/15 backdrop-blur-md hover:bg-white/25 border border-white/20 transition-all no-underline">
+              Executive Board
             </Link>
           </div>
         </div>
@@ -592,13 +596,16 @@ export default function LandingPage() {
             </p>
             <div className="flex flex-wrap items-center justify-center gap-4">
               <Link href="/business-owner/dashboard" className="btn-primary no-underline text-base px-8 py-4">
-                <Eye size={18} /> Business Owner View
+                <Eye size={18} /> Business Owner
               </Link>
               <Link href="/risk-manager/dashboard" className="btn-secondary no-underline text-base px-6 py-4">
-                <BarChart3 size={18} /> Risk Manager View
+                <BarChart3 size={18} /> Risk Manager
               </Link>
-              <Link href="/admin/users" className="btn-secondary no-underline text-base px-6 py-4">
-                <Lock size={18} /> Admin Panel
+              <Link href="/chief-risk-manager/dashboard" className="btn-secondary no-underline text-base px-6 py-4">
+                <Shield size={18} /> Chief RM
+              </Link>
+              <Link href="/executive/dashboard" className="btn-secondary no-underline text-base px-6 py-4">
+                <Lock size={18} /> Executive Board
               </Link>
             </div>
           </motion.div>

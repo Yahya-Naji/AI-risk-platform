@@ -65,6 +65,30 @@ async function main() {
     },
   });
 
+  const chiefRM = await prisma.user.create({
+    data: {
+      name: "Khalid Al-Mansoori",
+      email: "khalid.mansoori@bloomholding.com",
+      role: "CHIEF_RISK_MANAGER",
+      department: "Enterprise Risk Management",
+      company: "Bloom Holding",
+      group: "National Holding Group",
+      avatar: "KM",
+    },
+  });
+
+  const executive = await prisma.user.create({
+    data: {
+      name: "Hasan Tariq Qazi",
+      email: "hasan.qazi@bloomholding.com",
+      role: "EXECUTIVE",
+      department: "Executive Board",
+      company: "Bloom Holding",
+      group: "National Holding Group",
+      avatar: "HQ",
+    },
+  });
+
   console.log("⚠️  Creating risks...");
 
   // ─── Risks from Excel (IT Department - Bloom Holding) ─────────────────
