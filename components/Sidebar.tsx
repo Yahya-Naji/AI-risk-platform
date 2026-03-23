@@ -134,9 +134,7 @@ export default function Sidebar({ role }: SidebarProps) {
       {
         title: 'ADMIN',
         items: [
-          { icon: Home, label: 'Overview', href: '/admin/overview' },
           { icon: Users, label: 'User Management', href: '/admin/users' },
-          { icon: BarChart3, label: 'All Risks', href: '/risk-manager/registry' },
         ],
       },
     ],

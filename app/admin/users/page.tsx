@@ -132,15 +132,6 @@ export default function UsersPage() {
     executive: users.filter((u) => u.role === 'EXECUTIVE').length,
   };
 
-  const TABS: { key: TabKey; label: string }[] = [
-    { key: 'all', label: 'All' },
-    { key: 'admin', label: 'Administrators' },
-    { key: 'chief-risk-manager', label: 'Chief Risk Managers' },
-    { key: 'risk-manager', label: 'Risk Managers' },
-    { key: 'business-owner', label: 'Business Owners' },
-    { key: 'executive', label: 'Executives' },
-  ];
-
   const filteredUsers = users.filter((u) => {
     const matchSearch = u.name.toLowerCase().includes(search.toLowerCase()) || u.email.toLowerCase().includes(search.toLowerCase());
     const matchDept = deptFilter === 'All Departments' || u.department === deptFilter;
@@ -599,24 +590,30 @@ export default function UsersPage() {
             </div>
           </div>
 
-          {/* Stats */}
+          {/* Stats (clickable filters) */}
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '14px', marginBottom: '28px' }}>
             {[
-              { label: 'Total Users', value: tabCounts.all, color: '#4ab0de', icon: Users },
-              { label: 'Administrators', value: tabCounts.admin, color: '#ef4444', icon: Shield },
-              { label: 'Risk Managers', value: tabCounts['risk-manager'], color: '#8b5cf6', icon: AlertTriangle },
-              { label: 'Business Owners', value: tabCounts['business-owner'], color: '#4ab0de', icon: CheckCircle },
+              { key: 'all' as TabKey, label: 'Total Users', value: tabCounts.all, color: '#4ab0de', icon: Users },
+              { key: 'admin' as TabKey, label: 'Administrators', value: tabCounts.admin, color: '#ef4444', icon: Shield },
+              { key: 'risk-manager' as TabKey, label: 'Risk Managers', value: tabCounts['risk-manager'], color: '#8b5cf6', icon: AlertTriangle },
+              { key: 'business-owner' as TabKey, label: 'Business Owners', value: tabCounts['business-owner'], color: '#4ab0de', icon: CheckCircle },
             ].map((s) => {
               const Icon = s.icon;
               return (
                 <div
                   key={s.label}
+                  onClick={() => setActiveTab(s.key)}
                   style={{
                     background: 'var(--bg-card)',
-                    border: `1px solid ${s.color}25`,
+                    border: `1px solid ${activeTab === s.key ? s.color : s.color + '25'}`,
                     borderRadius: '14px',
                     padding: '18px 20px',
+                    cursor: 'pointer',
+                    transition: 'all 0.2s',
+                    boxShadow: activeTab === s.key ? `0 0 20px ${s.color}25` : undefined,
                   }}
+                  onMouseEnter={(e) => { (e.currentTarget as HTMLDivElement).style.transform = 'translateY(-2px)'; (e.currentTarget as HTMLDivElement).style.borderColor = s.color; }}
+                  onMouseLeave={(e) => { (e.currentTarget as HTMLDivElement).style.transform = 'none'; if (activeTab !== s.key) (e.currentTarget as HTMLDivElement).style.borderColor = s.color + '25'; }}
                 >
                   <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '8px' }}>
                     <span style={{ fontSize: '12px', color: 'var(--text-muted)' }}>{s.label}</span>
@@ -626,45 +623,6 @@ export default function UsersPage() {
                 </div>
               );
             })}
-          </div>
-
-          {/* Tabs */}
-          <div style={{ display: 'flex', gap: '4px', marginBottom: '20px', borderBottom: '1px solid var(--border-color)', paddingBottom: '0' }}>
-            {TABS.map((tab) => (
-              <button
-                key={tab.key}
-                onClick={() => setActiveTab(tab.key)}
-                style={{
-                  padding: '10px 16px',
-                  border: 'none',
-                  background: 'none',
-                  cursor: 'pointer',
-                  fontSize: '13px',
-                  fontWeight: activeTab === tab.key ? 700 : 400,
-                  color: activeTab === tab.key ? 'var(--accent-cyan)' : 'var(--text-muted)',
-                  borderBottom: `2px solid ${activeTab === tab.key ? 'var(--accent-cyan)' : 'transparent'}`,
-                  marginBottom: '-1px',
-                  transition: 'all 0.15s',
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: '6px',
-                }}
-              >
-                {tab.label}
-                <span
-                  style={{
-                    background: activeTab === tab.key ? 'rgba(74,176,222,0.15)' : 'var(--bg-card)',
-                    color: activeTab === tab.key ? 'var(--accent-cyan)' : 'var(--text-muted)',
-                    borderRadius: '10px',
-                    padding: '1px 7px',
-                    fontSize: '11px',
-                    fontWeight: 700,
-                  }}
-                >
-                  {tabCounts[tab.key]}
-                </span>
-              </button>
-            ))}
           </div>
 
           {/* Toolbar */}

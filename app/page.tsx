@@ -351,7 +351,7 @@ export default function LandingPage() {
             <Link href="/executive/dashboard" className="px-5 py-2.5 rounded-lg text-sm font-medium text-white bg-white/15 backdrop-blur-md hover:bg-white/25 border border-white/20 transition-all no-underline">
               Executive Board
             </Link>
-            <Link href="/admin/overview" className="px-4 py-2 rounded-lg text-sm font-medium text-white/70 hover:text-white hover:bg-white/10 transition-all no-underline">
+            <Link href="/admin/users" className="px-4 py-2 rounded-lg text-sm font-medium text-white/70 hover:text-white hover:bg-white/10 transition-all no-underline">
               Admin
             </Link>
           </div>
@@ -610,7 +610,7 @@ export default function LandingPage() {
               <Link href="/executive/dashboard" className="btn-secondary no-underline text-base px-6 py-4">
                 <Lock size={18} /> Executive Board
               </Link>
-              <Link href="/admin/overview" className="btn-secondary no-underline text-base px-6 py-4">
+              <Link href="/admin/users" className="btn-secondary no-underline text-base px-6 py-4">
                 <Shield size={18} /> Admin
               </Link>
             </div>

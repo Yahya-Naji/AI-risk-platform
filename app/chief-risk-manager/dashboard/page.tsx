@@ -391,6 +391,8 @@ export default function ChiefRiskManagerDashboard() {
                   if (!highlight) return true;
                   if (highlight === 'pending') return r.status === 'SUBMITTED' || r.status === 'IN_REVIEW';
                   if (highlight === 'mitigated') return r.status === 'MITIGATED';
+                  if (highlight === 'overdue') return r.status === 'SUBMITTED' || r.status === 'IN_REVIEW';
+                  if (highlight === 'rm') return true;
                   return true;
                 }).map((r) => {
                   const lc = LEVEL_COLORS[r.riskLevel] || '#4ab0de';
