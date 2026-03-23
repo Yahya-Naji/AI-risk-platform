@@ -23,6 +23,7 @@ import {
   XCircle,
   Send,
   ArrowRight,
+  Zap,
 } from 'lucide-react';
 
 /* ─── Types ─────────────────────────────────────────────────────────────────── */
@@ -190,6 +191,8 @@ export default function TaskDetailPage() {
   const [saving, setSaving] = useState(false);
   const [savedMsg, setSavedMsg] = useState('');
   const [submitting, setSubmitting] = useState(false);
+  const [aiLoading, setAiLoading] = useState(false);
+  const [uploading, setUploading] = useState(false);
 
   /* ── Load task data ─────────────────────────────────────────────────────── */
   const loadTask = useCallback(async () => {
@@ -279,6 +282,54 @@ export default function TaskDetailPage() {
       setTimeout(() => router.push('/business-owner/dashboard'), 1500);
     } catch { /* */ }
     setSubmitting(false);
+  };
+
+  /* ── AI Propose ─────────────────────────────────────────────────────────── */
+  const handleAiPropose = async () => {
+    if (!task || aiLoading) return;
+    setAiLoading(true);
+    try {
+      const prompt = `For the risk "${task.risk.title}" (Category: ${categoryLabel[task.risk.category] || task.risk.category}, Risk Level: ${task.risk.riskLevel}, Score: ${task.risk.inherentScore}) with control "${task.control?.description || 'N/A'}" (Type: ${task.control ? controlTypeLabel[task.control.type] : 'N/A'}), provide a JSON object with exactly three fields:
+1. "effectiveness": A 2-3 sentence assessment of the control's effectiveness
+2. "gaps": A 2-3 sentence description of gaps or weaknesses
+3. "recommendations": A 2-3 sentence set of recommendations for improvement
+Return ONLY valid JSON, no markdown.`;
+      const res = await fetch('/api/risk-manager/chat', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ message: prompt, history: [] }),
+      });
+      const data = await res.json();
+      try {
+        const parsed = JSON.parse(data.message);
+        if (parsed.effectiveness) setEffectiveness(parsed.effectiveness);
+        if (parsed.gaps) setGaps(parsed.gaps);
+        if (parsed.recommendations) setRecommendations(parsed.recommendations);
+      } catch {
+        setEffectiveness(data.message || '');
+      }
+    } catch { /* */ }
+    setAiLoading(false);
+  };
+
+  /* ── File upload ────────────────────────────────────────────────────────── */
+  const handleFileUpload = async (files: FileList | null) => {
+    if (!files || !task) return;
+    setUploading(true);
+    for (let i = 0; i < files.length; i++) {
+      const file = files[i];
+      const formData = new FormData();
+      formData.append('file', file);
+      formData.append('taskId', task.taskId);
+      try {
+        await fetch('/api/business-owner/tasks/upload', {
+          method: 'POST',
+          body: formData,
+        });
+      } catch { /* */ }
+    }
+    setUploading(false);
+    loadTask();
   };
 
   /* ── Add comment ────────────────────────────────────────────────────────── */
@@ -472,7 +523,22 @@ export default function TaskDetailPage() {
 
             {/* Assessment Input */}
             <div className="risk-card animate-fade-up-3" style={{ padding: '20px' }}>
-              <h3 style={{ fontSize: '15px', fontWeight: 600, margin: '0 0 18px' }}>Assessment Input</h3>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '18px' }}>
+                <h3 style={{ fontSize: '15px', fontWeight: 600, margin: 0 }}>Assessment Input</h3>
+                <button
+                  className="btn-primary"
+                  style={{ fontSize: '12px', padding: '7px 14px', display: 'flex', alignItems: 'center', gap: '6px', opacity: aiLoading ? 0.6 : 1 }}
+                  onClick={handleAiPropose}
+                  disabled={aiLoading}
+                >
+                  {aiLoading ? (
+                    <span style={{ display: 'inline-block', width: 14, height: 14, border: '2px solid rgba(255,255,255,0.3)', borderTopColor: '#fff', borderRadius: '50%', animation: 'spin 0.6s linear infinite' }} />
+                  ) : (
+                    <Zap size={14} />
+                  )}
+                  {aiLoading ? 'AI Thinking...' : 'AI Propose'}
+                </button>
+              </div>
               <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
                 {[
                   { label: 'Control Effectiveness', hint: 'How effective is this control? Describe your assessment.', value: effectiveness, setter: setEffectiveness },
@@ -517,7 +583,8 @@ export default function TaskDetailPage() {
               <div
                 onDragOver={(e) => { e.preventDefault(); setIsDragOver(true); }}
                 onDragLeave={() => setIsDragOver(false)}
-                onDrop={(e) => { e.preventDefault(); setIsDragOver(false); }}
+                onDrop={(e) => { e.preventDefault(); setIsDragOver(false); handleFileUpload(e.dataTransfer.files); }}
+                onClick={() => document.getElementById('file-upload-input')?.click()}
                 style={{
                   border: `2px dashed ${isDragOver ? 'var(--accent-cyan)' : 'var(--border-color)'}`,
                   borderRadius: '10px', padding: '28px', textAlign: 'center',
@@ -525,9 +592,17 @@ export default function TaskDetailPage() {
                   cursor: 'pointer', transition: 'all 0.2s', marginBottom: '16px',
                 }}
               >
+                <input
+                  id="file-upload-input"
+                  type="file"
+                  multiple
+                  accept=".pdf,.xlsx,.xls,.docx,.doc,.png,.jpg,.jpeg"
+                  style={{ display: 'none' }}
+                  onChange={(e) => handleFileUpload(e.target.files)}
+                />
                 <Upload size={28} color="var(--text-muted)" style={{ marginBottom: '8px' }} />
                 <div style={{ fontWeight: 500, fontSize: '14px', marginBottom: '4px' }}>
-                  Drop files here or click to browse
+                  {uploading ? 'Uploading...' : 'Drop files here or click to browse'}
                 </div>
                 <div style={{ fontSize: '12px', color: 'var(--text-muted)' }}>
                   Supported: PDF, XLSX, DOCX, PNG, JPG (max 50MB)

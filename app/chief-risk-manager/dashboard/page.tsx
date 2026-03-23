@@ -195,8 +195,8 @@ export default function ChiefRiskManagerDashboard() {
             <h3 style={{ fontSize: '14px', fontWeight: 600, margin: 0, display: 'flex', alignItems: 'center', gap: '8px' }}>
               <Shield size={14} style={{ color: '#8b5cf6' }} /> Risk Manager Performance
             </h3>
-            <button onClick={() => router.push('/chief-risk-manager/users')} className="btn-secondary" style={{ fontSize: '11px', padding: '4px 10px', display: 'flex', alignItems: 'center', gap: '4px' }}>
-              Manage Users <Eye size={10} />
+            <button onClick={() => router.push('/risk-manager/registry')} className="btn-secondary" style={{ fontSize: '11px', padding: '4px 10px', display: 'flex', alignItems: 'center', gap: '4px' }}>
+              Full Registry <Eye size={10} />
             </button>
           </div>
           <div style={{ overflowX: 'auto' }}>

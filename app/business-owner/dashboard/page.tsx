@@ -131,24 +131,15 @@ export default function BusinessOwnerDashboard() {
   const filteredTasks = activeTab === 'all'
     ? tasks
     : tasks.filter((t) => {
-        const map: Record<string, string> = {
-          overdue: 'OVERDUE',
-          changes: 'CHANGES_REQUESTED',
-          inprogress: 'IN_PROGRESS',
-          completed: 'COMPLETED',
-          submitted: 'SUBMITTED',
-          pending: 'PENDING',
+        const map: Record<string, string[]> = {
+          overdue: ['OVERDUE'],
+          changes: ['CHANGES_REQUESTED'],
+          inprogress: ['IN_PROGRESS'],
+          completed: ['COMPLETED', 'SUBMITTED'],
+          pending: ['PENDING'],
         };
-        return t.status === map[activeTab];
+        return map[activeTab]?.includes(t.status);
       });
-
-  const tabs: { key: TabKey; label: string; count: number }[] = [
-    { key: 'all', label: 'All Tasks', count: stats.totalTasks },
-    { key: 'overdue', label: 'Overdue', count: stats.overdue },
-    { key: 'changes', label: 'Changes Requested', count: stats.changesRequested },
-    { key: 'inprogress', label: 'In Progress', count: stats.inProgress },
-    { key: 'completed', label: 'Completed', count: stats.completed + stats.submitted },
-  ];
 
   return (
     <div style={{ display: 'flex', height: '100vh', background: 'var(--bg-primary)', color: 'var(--text-primary)', overflow: 'hidden' }}>
@@ -264,35 +255,6 @@ export default function BusinessOwnerDashboard() {
               </h2>
               <span style={{ fontSize: '11px', color: 'var(--text-muted)' }}>Sorted by priority</span>
             </div>
-            {/* Tabs */}
-            <div style={{ display: 'flex', gap: '2px', borderBottom: '1px solid var(--border-color)', padding: '12px 18px 0', overflowX: 'auto' }}>
-              {tabs.map((tab) => (
-                <button
-                  key={tab.key}
-                  onClick={() => setActiveTab(tab.key)}
-                  style={{
-                    padding: '7px 12px', fontSize: '12px',
-                    fontWeight: activeTab === tab.key ? 600 : 400,
-                    color: activeTab === tab.key ? 'var(--accent-cyan)' : 'var(--text-muted)',
-                    background: 'transparent', border: 'none',
-                    borderBottom: activeTab === tab.key ? '2px solid var(--accent-cyan)' : '2px solid transparent',
-                    cursor: 'pointer', whiteSpace: 'nowrap', display: 'flex', alignItems: 'center', gap: '5px',
-                  }}
-                >
-                  {tab.label}
-                  <span
-                    style={{
-                      background: activeTab === tab.key ? 'rgba(74,176,222,0.2)' : 'rgba(160,160,192,0.1)',
-                      color: activeTab === tab.key ? 'var(--accent-cyan)' : 'var(--text-muted)',
-                      padding: '1px 6px', borderRadius: '10px', fontSize: '10px', fontWeight: 600,
-                    }}
-                  >
-                    {tab.count}
-                  </span>
-                </button>
-              ))}
-            </div>
-
             {/* Table */}
             <div style={{ overflowX: 'auto' }}>
               <table className="risk-table">

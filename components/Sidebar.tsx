@@ -15,8 +15,11 @@ import {
   Search,
   Users,
   FolderOpen,
+  Sun,
+  Moon,
   type LucideIcon,
 } from 'lucide-react';
+import { useTheme } from '@/components/ThemeProvider';
 
 type Role = 'business-owner' | 'risk-manager' | 'admin' | 'chief-risk-manager' | 'executive';
 
@@ -65,6 +68,7 @@ const roleLabel: Record<string, string> = {
 
 export default function Sidebar({ role }: SidebarProps) {
   const pathname = usePathname();
+  const { theme, toggleTheme } = useTheme();
   const [user, setUser] = useState<UserData | null>(null);
   const [taskCount, setTaskCount] = useState(0);
 
@@ -141,7 +145,6 @@ export default function Sidebar({ role }: SidebarProps) {
         title: 'OVERVIEW',
         items: [
           { icon: Home, label: 'Dashboard', href: '/chief-risk-manager/dashboard' },
-          { icon: Users, label: 'User Management', href: '/chief-risk-manager/users' },
           { icon: ClipboardList, label: 'Risk Registry', href: '/risk-manager/registry' },
           { icon: Search, label: 'Pending Review', href: '/risk-manager/review' },
         ],
@@ -183,33 +186,35 @@ export default function Sidebar({ role }: SidebarProps) {
       }}
     >
       {/* Logo */}
-      <div style={{ padding: '20px 16px 14px', borderBottom: '1px solid var(--border-color)' }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-          <div
-            style={{
-              width: '34px',
-              height: '34px',
-              borderRadius: '10px',
-              background: 'linear-gradient(135deg, #4ab0de 0%, #8b5cf6 100%)',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              flexShrink: 0,
-            }}
-          >
-            <Shield size={18} color="#fff" />
-          </div>
-          <div>
-            <div style={{ fontSize: '16px', fontWeight: 700, lineHeight: 1.1 }}>
-              <span className="gradient-text">RiskAI</span>{' '}
-              <span style={{ color: 'var(--text-secondary)', fontWeight: 400, fontSize: '14px' }}>Platform</span>
+      <Link href="/" style={{ textDecoration: 'none', color: 'inherit' }}>
+        <div style={{ padding: '20px 16px 14px', borderBottom: '1px solid var(--border-color)', cursor: 'pointer' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+            <div
+              style={{
+                width: '34px',
+                height: '34px',
+                borderRadius: '10px',
+                background: 'linear-gradient(135deg, #4ab0de 0%, #8b5cf6 100%)',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                flexShrink: 0,
+              }}
+            >
+              <Shield size={18} color="#fff" />
             </div>
-            <div style={{ fontSize: '10px', color: 'var(--text-muted)', marginTop: '2px' }}>
-              {user?.group || 'National Holding Group'}
+            <div>
+              <div style={{ fontSize: '16px', fontWeight: 700, lineHeight: 1.1 }}>
+                <span className="gradient-text">RiskAI</span>{' '}
+                <span style={{ color: 'var(--text-secondary)', fontWeight: 400, fontSize: '14px' }}>Platform</span>
+              </div>
+              <div style={{ fontSize: '10px', color: 'var(--text-muted)', marginTop: '2px' }}>
+                {user?.group || 'National Holding Group'}
+              </div>
             </div>
           </div>
         </div>
-      </div>
+      </Link>
 
       {/* Department Badge */}
       <div style={{ padding: '12px 16px', borderBottom: '1px solid var(--border-color)' }}>
@@ -311,39 +316,90 @@ export default function Sidebar({ role }: SidebarProps) {
         ))}
       </nav>
 
-      {/* User Footer */}
-      <div
-        style={{
-          padding: '12px 14px',
-          borderTop: '1px solid var(--border-color)',
-          display: 'flex',
-          alignItems: 'center',
-          gap: '10px',
-        }}
-      >
+      {/* Theme Toggle + User Footer */}
+      <div style={{ borderTop: '1px solid var(--border-color)' }}>
         <div
           style={{
-            width: '34px',
-            height: '34px',
-            borderRadius: '50%',
-            background: 'linear-gradient(135deg, #4ab0de 0%, #8b5cf6 100%)',
+            padding: '8px 14px',
             display: 'flex',
             alignItems: 'center',
-            justifyContent: 'center',
-            fontSize: '12px',
-            fontWeight: 700,
-            color: '#fff',
-            flexShrink: 0,
+            justifyContent: 'space-between',
           }}
         >
-          {user?.avatar || '..'}
+          <span style={{ fontSize: '10px', color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.5px', fontWeight: 600 }}>
+            {theme === 'dark' ? 'Dark' : 'Light'} Mode
+          </span>
+          <button
+            onClick={toggleTheme}
+            style={{
+              width: '44px',
+              height: '24px',
+              borderRadius: '12px',
+              border: 'none',
+              background: theme === 'dark'
+                ? 'linear-gradient(135deg, #4ab0de, #8b5cf6)'
+                : 'linear-gradient(135deg, #f59e0b, #ef4444)',
+              cursor: 'pointer',
+              position: 'relative',
+              transition: 'background 0.3s',
+              flexShrink: 0,
+            }}
+          >
+            <div
+              style={{
+                width: '18px',
+                height: '18px',
+                borderRadius: '50%',
+                background: '#fff',
+                position: 'absolute',
+                top: '3px',
+                left: theme === 'dark' ? '3px' : '23px',
+                transition: 'left 0.3s ease',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+              }}
+            >
+              {theme === 'dark'
+                ? <Moon size={10} style={{ color: '#8b5cf6' }} />
+                : <Sun size={10} style={{ color: '#f59e0b' }} />
+              }
+            </div>
+          </button>
         </div>
-        <div style={{ minWidth: 0 }}>
-          <div style={{ fontSize: '12px', fontWeight: 600, color: 'var(--text-primary)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-            {user?.name || 'Loading...'}
+        <div
+          style={{
+            padding: '10px 14px',
+            borderTop: '1px solid var(--border-color)',
+            display: 'flex',
+            alignItems: 'center',
+            gap: '10px',
+          }}
+        >
+          <div
+            style={{
+              width: '34px',
+              height: '34px',
+              borderRadius: '50%',
+              background: 'linear-gradient(135deg, #4ab0de 0%, #8b5cf6 100%)',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              fontSize: '12px',
+              fontWeight: 700,
+              color: '#fff',
+              flexShrink: 0,
+            }}
+          >
+            {user?.avatar || '..'}
           </div>
-          <div style={{ fontSize: '10px', color: 'var(--text-muted)' }}>
-            {user?.role ? roleLabel[user.role] || user.role : ''}
+          <div style={{ minWidth: 0 }}>
+            <div style={{ fontSize: '12px', fontWeight: 600, color: 'var(--text-primary)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+              {user?.name || 'Loading...'}
+            </div>
+            <div style={{ fontSize: '10px', color: 'var(--text-muted)' }}>
+              {user?.role ? roleLabel[user.role] || user.role : ''}
+            </div>
           </div>
         </div>
       </div>

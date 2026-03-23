@@ -11,6 +11,7 @@ import {
   Zap,
   ArrowUpDown,
 } from 'lucide-react';
+import MarkdownRenderer from '@/components/MarkdownRenderer';
 
 interface RiskRow {
   id: string;
@@ -28,6 +29,7 @@ interface RiskRow {
   reportedBy: { name: string; avatar: string } | null;
   assignedTo: { name: string; avatar: string } | null;
   strategicObjective: string | null;
+  createdAt: string;
   _count: { controls: number; tasks: number };
 }
 
@@ -62,7 +64,7 @@ export default function RiskRegistryPage() {
   const [statusFilter, setStatusFilter] = useState('All');
   const [levelFilter, setLevelFilter] = useState('All');
   const [catFilter, setCatFilter] = useState('All');
-  const [sortField, setSortField] = useState<'inherentScore' | 'riskId' | 'title'>('inherentScore');
+  const [sortField, setSortField] = useState<'inherentScore' | 'riskId' | 'title' | 'category' | 'createdAt'>('inherentScore');
   const [sortDir, setSortDir] = useState<'asc' | 'desc'>('desc');
   const [aiLoading, setAiLoading] = useState(false);
   const [aiResult, setAiResult] = useState<string | null>(null);
@@ -95,6 +97,11 @@ export default function RiskRegistryPage() {
       return matchSearch && matchDept && matchStatus && matchLevel && matchCat;
     })
     .sort((a, b) => {
+      if (sortField === 'createdAt') {
+        const aTime = new Date(a.createdAt).getTime();
+        const bTime = new Date(b.createdAt).getTime();
+        return sortDir === 'asc' ? aTime - bTime : bTime - aTime;
+      }
       const aVal = a[sortField];
       const bVal = b[sortField];
       if (typeof aVal === 'number' && typeof bVal === 'number') {
@@ -190,12 +197,12 @@ export default function RiskRegistryPage() {
             </button>
           </div>
           {aiResult && (
-            <div style={{ padding: '12px 16px', borderRadius: '10px', background: 'rgba(139,92,246,0.08)', border: '1px solid rgba(139,92,246,0.2)', fontSize: '13px', color: 'var(--text-secondary)', lineHeight: 1.6, marginBottom: '8px', whiteSpace: 'pre-wrap' }}>
+            <div style={{ padding: '12px 16px', borderRadius: '10px', background: 'rgba(139,92,246,0.08)', border: '1px solid rgba(139,92,246,0.2)', marginBottom: '8px' }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginBottom: '6px', fontSize: '11px', fontWeight: 700, color: '#8b5cf6' }}>
                 <Zap size={12} /> AI Response
                 <button onClick={() => setAiResult(null)} style={{ marginLeft: 'auto', background: 'none', border: 'none', color: 'var(--text-muted)', cursor: 'pointer', fontSize: '14px' }}>&times;</button>
               </div>
-              {aiResult}
+              <MarkdownRenderer content={aiResult} />
             </div>
           )}
           <div style={{ display: 'flex', gap: '6px', flexWrap: 'wrap' }}>
@@ -253,12 +260,12 @@ export default function RiskRegistryPage() {
                   {[
                     { key: 'riskId', label: 'Risk ID', sortable: true, width: '90px' },
                     { key: 'title', label: 'Risk Name', sortable: true },
-                    { key: 'category', label: 'Category', sortable: false, width: '100px' },
+                    { key: 'category', label: 'Category', sortable: true, width: '100px' },
                     { key: 'department', label: 'Dept', sortable: false, width: '80px' },
                     { key: 'inherentScore', label: 'Scores (I/G/R)', sortable: true, width: '120px' },
-                    { key: 'controls', label: 'Control', sortable: false, width: '80px' },
                     { key: 'status', label: 'Status', sortable: false, width: '110px' },
                     { key: 'owner', label: 'Owner', sortable: false, width: '100px' },
+                    { key: 'createdAt', label: 'Date', sortable: true, width: '90px' },
                     { key: 'actions', label: 'Actions', sortable: false, width: '80px' },
                   ].map((col) => (
                     <th key={col.key} style={{
@@ -316,15 +323,6 @@ export default function RiskRegistryPage() {
                         </div>
                       </td>
                       <td style={{ padding: '10px 12px' }}>
-                        <span style={{
-                          fontSize: '10px', fontWeight: 600, padding: '2px 8px', borderRadius: '4px',
-                          background: risk._count.controls > 0 ? 'rgba(16,185,129,0.15)' : 'rgba(239,68,68,0.15)',
-                          color: risk._count.controls > 0 ? '#10b981' : '#ef4444',
-                        }}>
-                          {risk._count.controls > 0 ? (risk._count.controls >= 3 ? 'Effective' : 'Partial') : 'None'}
-                        </span>
-                      </td>
-                      <td style={{ padding: '10px 12px' }}>
                         <span style={{ fontSize: '10px', fontWeight: 600, padding: '2px 8px', borderRadius: '4px', background: sc.bg, color: sc.color }}>
                           {sc.label}
                         </span>
@@ -342,6 +340,9 @@ export default function RiskRegistryPage() {
                         ) : (
                           <span style={{ fontSize: '11px', color: 'var(--text-muted)' }}>—</span>
                         )}
+                      </td>
+                      <td style={{ padding: '10px 12px', fontSize: '11px', color: 'var(--text-muted)' }}>
+                        {new Date(risk.createdAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
                       </td>
                       <td style={{ padding: '10px 12px', textAlign: 'center' }} onClick={(e) => e.stopPropagation()}>
                         <button className="btn-primary" style={{ fontSize: '10px', padding: '4px 10px', display: 'inline-flex', alignItems: 'center', gap: '4px' }}

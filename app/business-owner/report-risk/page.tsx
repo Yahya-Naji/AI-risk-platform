@@ -20,51 +20,12 @@ import {
   ArrowRight,
   type LucideIcon,
 } from 'lucide-react';
+import MarkdownRenderer from '@/components/MarkdownRenderer';
 
 interface ChatMessage {
   role: 'user' | 'assistant';
   content: string;
   timestamp?: string;
-}
-
-/** Render markdown-like text: **bold**, - bullets, newlines */
-function RichText({ text }: { text: string }) {
-  const lines = text.split('\n');
-  const elements: React.ReactNode[] = [];
-
-  lines.forEach((line, li) => {
-    const trimmed = line.trim();
-    if (!trimmed && li > 0) {
-      elements.push(<div key={`br-${li}`} style={{ height: '8px' }} />);
-      return;
-    }
-
-    // Bullet point
-    const isBullet = /^[-•]\s+/.test(trimmed);
-    const content = isBullet ? trimmed.replace(/^[-•]\s+/, '') : trimmed;
-
-    // Parse inline bold **text**
-    const parts = content.split(/(\*\*[^*]+\*\*)/g);
-    const rendered = parts.map((part, pi) => {
-      if (part.startsWith('**') && part.endsWith('**')) {
-        return <strong key={pi} style={{ color: 'var(--text-primary)', fontWeight: 600 }}>{part.slice(2, -2)}</strong>;
-      }
-      return <span key={pi}>{part}</span>;
-    });
-
-    if (isBullet) {
-      elements.push(
-        <div key={li} style={{ display: 'flex', gap: '8px', paddingLeft: '4px', marginTop: '3px' }}>
-          <span style={{ color: 'var(--accent-cyan)', fontWeight: 700, flexShrink: 0, marginTop: '1px' }}>•</span>
-          <span>{rendered}</span>
-        </div>
-      );
-    } else {
-      elements.push(<div key={li} style={{ marginTop: li > 0 ? '2px' : 0 }}>{rendered}</div>);
-    }
-  });
-
-  return <div style={{ lineHeight: 1.65 }}>{elements}</div>;
 }
 
 interface DraftRisk {
@@ -356,7 +317,7 @@ export default function ReportRiskPage() {
                         whiteSpace: msg.role === 'user' ? 'pre-wrap' : undefined,
                       }}
                     >
-                      {msg.role === 'assistant' ? <RichText text={msg.content} /> : msg.content}
+                      {msg.role === 'assistant' ? <MarkdownRenderer content={msg.content} /> : msg.content}
                     </div>
                   </div>
                   {msg.timestamp && (

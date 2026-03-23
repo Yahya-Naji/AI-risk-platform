@@ -36,20 +36,28 @@ interface User {
 
 const ROLE_COLORS: Record<string, { bg: string; color: string; border: string }> = {
   ADMIN: { bg: 'rgba(239,68,68,0.12)', color: '#ef4444', border: 'rgba(239,68,68,0.25)' },
+  CHIEF_RISK_MANAGER: { bg: 'rgba(236,72,153,0.12)', color: '#ec4899', border: 'rgba(236,72,153,0.25)' },
   RISK_MANAGER: { bg: 'rgba(139,92,246,0.12)', color: '#8b5cf6', border: 'rgba(139,92,246,0.25)' },
   BUSINESS_OWNER: { bg: 'rgba(74,176,222,0.12)', color: '#4ab0de', border: 'rgba(74,176,222,0.25)' },
+  EXECUTIVE: { bg: 'rgba(245,158,11,0.12)', color: '#f59e0b', border: 'rgba(245,158,11,0.25)' },
 };
 
 const ROLE_LABELS: Record<string, string> = {
   ADMIN: 'Administrator',
+  CHIEF_RISK_MANAGER: 'Chief Risk Manager',
   RISK_MANAGER: 'Risk Manager',
   BUSINESS_OWNER: 'Business Owner',
+  EXECUTIVE: 'Executive Board',
 };
 
 const ROLE_DESCRIPTIONS: Record<string, { desc: string; perms: string }> = {
   ADMIN: {
     desc: 'Full system access including user management',
     perms: 'All permissions + Admin Panel',
+  },
+  CHIEF_RISK_MANAGER: {
+    desc: 'Oversee all risk managers and enterprise risk',
+    perms: 'Dashboard, Registry, Review, Reports',
   },
   RISK_MANAGER: {
     desc: 'Manage, validate and assign risks',
@@ -59,9 +67,13 @@ const ROLE_DESCRIPTIONS: Record<string, { desc: string; perms: string }> = {
     desc: 'Report risks for their department',
     perms: 'Report Risk, View Tasks',
   },
+  EXECUTIVE: {
+    desc: 'Board-level risk oversight and reporting',
+    perms: 'Board Dashboard, Risk Portfolio',
+  },
 };
 
-type TabKey = 'all' | 'admin' | 'risk-manager' | 'business-owner';
+type TabKey = 'all' | 'admin' | 'chief-risk-manager' | 'risk-manager' | 'business-owner' | 'executive';
 
 export default function UsersPage() {
   const [users, setUsers] = useState<User[]>([]);
@@ -114,15 +126,19 @@ export default function UsersPage() {
   const tabCounts = {
     all: users.length,
     admin: users.filter((u) => u.role === 'ADMIN').length,
+    'chief-risk-manager': users.filter((u) => u.role === 'CHIEF_RISK_MANAGER').length,
     'risk-manager': users.filter((u) => u.role === 'RISK_MANAGER').length,
     'business-owner': users.filter((u) => u.role === 'BUSINESS_OWNER').length,
+    executive: users.filter((u) => u.role === 'EXECUTIVE').length,
   };
 
   const TABS: { key: TabKey; label: string }[] = [
     { key: 'all', label: 'All' },
     { key: 'admin', label: 'Administrators' },
+    { key: 'chief-risk-manager', label: 'Chief Risk Managers' },
     { key: 'risk-manager', label: 'Risk Managers' },
     { key: 'business-owner', label: 'Business Owners' },
+    { key: 'executive', label: 'Executives' },
   ];
 
   const filteredUsers = users.filter((u) => {
@@ -131,8 +147,10 @@ export default function UsersPage() {
     const matchTab =
       activeTab === 'all' ||
       (activeTab === 'admin' && u.role === 'ADMIN') ||
+      (activeTab === 'chief-risk-manager' && u.role === 'CHIEF_RISK_MANAGER') ||
       (activeTab === 'risk-manager' && u.role === 'RISK_MANAGER') ||
-      (activeTab === 'business-owner' && u.role === 'BUSINESS_OWNER');
+      (activeTab === 'business-owner' && u.role === 'BUSINESS_OWNER') ||
+      (activeTab === 'executive' && u.role === 'EXECUTIVE');
     return matchSearch && matchDept && matchTab;
   });
 

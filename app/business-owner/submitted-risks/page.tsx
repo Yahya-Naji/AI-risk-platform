@@ -117,14 +117,6 @@ export default function SubmittedRisksPage() {
     MITIGATED: submitted.filter(r => r.status === 'MITIGATED').length,
   };
 
-  const filters: { key: FilterKey; label: string }[] = [
-    { key: 'all', label: 'All' },
-    { key: 'SUBMITTED', label: 'Submitted' },
-    { key: 'IN_REVIEW', label: 'In Review' },
-    { key: 'VALIDATED', label: 'Validated' },
-    { key: 'MITIGATED', label: 'Mitigated' },
-  ];
-
   return (
     <div style={{ display: 'flex', height: '100vh', background: 'var(--bg-primary)', color: 'var(--text-primary)', overflow: 'hidden' }}>
       <Sidebar role="business-owner" />
@@ -145,43 +137,27 @@ export default function SubmittedRisksPage() {
           </Link>
         </div>
 
-        {/* Stats Row */}
+        {/* Stats Row (clickable filters) */}
         <div className="animate-fade-up-1" style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '12px' }}>
           {[
-            { label: 'Total Submitted', value: counts.all, color: '#4ab0de', bg: 'rgba(74,176,222,0.1)' },
-            { label: 'Pending Review', value: counts.SUBMITTED + counts.IN_REVIEW, color: '#8b5cf6', bg: 'rgba(139,92,246,0.1)' },
-            { label: 'Validated', value: counts.VALIDATED, color: '#10b981', bg: 'rgba(16,185,129,0.1)' },
-            { label: 'Mitigated', value: counts.MITIGATED, color: '#10b981', bg: 'rgba(16,185,129,0.1)' },
+            { key: 'all' as FilterKey, label: 'Total Submitted', value: counts.all, color: '#4ab0de' },
+            { key: 'SUBMITTED' as FilterKey, label: 'Pending Review', value: counts.SUBMITTED + counts.IN_REVIEW, color: '#8b5cf6' },
+            { key: 'VALIDATED' as FilterKey, label: 'Validated', value: counts.VALIDATED, color: '#10b981' },
+            { key: 'MITIGATED' as FilterKey, label: 'Mitigated', value: counts.MITIGATED, color: '#10b981' },
           ].map((stat) => (
-            <div key={stat.label} className="risk-card" style={{ padding: '16px', textAlign: 'center' }}>
+            <div key={stat.label} className="risk-card"
+              onClick={() => setFilter(stat.key)}
+              style={{
+                padding: '16px', textAlign: 'center', cursor: 'pointer', transition: 'all 0.2s',
+                borderColor: filter === stat.key ? stat.color : undefined,
+                boxShadow: filter === stat.key ? `0 0 20px ${stat.color}25` : undefined,
+              }}
+              onMouseEnter={(e) => { (e.currentTarget as HTMLDivElement).style.transform = 'translateY(-2px)'; (e.currentTarget as HTMLDivElement).style.borderColor = stat.color; }}
+              onMouseLeave={(e) => { (e.currentTarget as HTMLDivElement).style.transform = 'none'; if (filter !== stat.key) (e.currentTarget as HTMLDivElement).style.borderColor = 'var(--border-color)'; }}
+            >
               <div style={{ fontSize: '26px', fontWeight: 700, color: stat.color, lineHeight: 1 }}>{stat.value}</div>
               <div style={{ fontSize: '11px', color: 'var(--text-muted)', marginTop: '6px' }}>{stat.label}</div>
             </div>
-          ))}
-        </div>
-
-        {/* Filter Tabs */}
-        <div className="animate-fade-up-2" style={{ display: 'flex', gap: '8px' }}>
-          {filters.map((f) => (
-            <button
-              key={f.key}
-              onClick={() => setFilter(f.key)}
-              style={{
-                padding: '6px 14px', borderRadius: '8px', fontSize: '12px', fontWeight: 500,
-                background: filter === f.key ? 'rgba(74,176,222,0.15)' : 'var(--bg-card)',
-                color: filter === f.key ? 'var(--accent-cyan)' : 'var(--text-muted)',
-                border: filter === f.key ? '1px solid rgba(74,176,222,0.3)' : '1px solid var(--border-color)',
-                cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '5px',
-              }}
-            >
-              {f.label}
-              <span style={{
-                background: filter === f.key ? 'rgba(74,176,222,0.2)' : 'rgba(160,160,192,0.1)',
-                padding: '1px 6px', borderRadius: '8px', fontSize: '10px', fontWeight: 600,
-              }}>
-                {counts[f.key]}
-              </span>
-            </button>
           ))}
         </div>
 

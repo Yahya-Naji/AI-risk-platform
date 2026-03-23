@@ -17,6 +17,7 @@ import {
   Zap,
   Radio,
 } from 'lucide-react';
+import MarkdownRenderer from '@/components/MarkdownRenderer';
 
 type ConnectionState = 'disconnected' | 'connecting' | 'connected';
 
@@ -343,9 +344,8 @@ export default function AssistantPage() {
                         <div style={{
                           maxWidth: '75%', padding: '10px 14px', borderRadius: '12px 12px 12px 4px',
                           background: 'var(--bg-card)', border: '1px solid var(--border-color)',
-                          fontSize: '13px', lineHeight: 1.6,
                         }}>
-                          {log.text}
+                          <MarkdownRenderer content={log.text} />
                         </div>
                       </>
                     ) : (

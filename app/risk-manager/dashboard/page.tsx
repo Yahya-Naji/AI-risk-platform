@@ -135,14 +135,27 @@ export default function RiskManagerDashboard() {
   const maxCatCount = Math.max(...catEntries.map(([, c]) => c), 1);
   const objEntries = Object.entries(byObjective).sort((a, b) => b[1].avgScore - a[1].avgScore);
 
-  // Control adequacy percentages
+  // Control adequacy percentages (ensure they add to 100)
   const ctrlTotal = controlAdequacy.total || 1;
-  const ctrlPcts = {
-    effective: Math.round((controlAdequacy.effective / ctrlTotal) * 100),
-    partial: Math.round((controlAdequacy.partiallyEffective / ctrlTotal) * 100),
-    ineffective: Math.round((controlAdequacy.ineffective / ctrlTotal) * 100),
-    notAssessed: Math.round((controlAdequacy.notAssessed / ctrlTotal) * 100),
+  const rawPcts = {
+    effective: (controlAdequacy.effective / ctrlTotal) * 100,
+    partial: (controlAdequacy.partiallyEffective / ctrlTotal) * 100,
+    ineffective: (controlAdequacy.ineffective / ctrlTotal) * 100,
+    notAssessed: (controlAdequacy.notAssessed / ctrlTotal) * 100,
   };
+  const ctrlPcts = {
+    effective: Math.round(rawPcts.effective),
+    partial: Math.round(rawPcts.partial),
+    ineffective: Math.round(rawPcts.ineffective),
+    notAssessed: Math.round(rawPcts.notAssessed),
+  };
+  // Adjust rounding so total = 100
+  const pctSum = ctrlPcts.effective + ctrlPcts.partial + ctrlPcts.ineffective + ctrlPcts.notAssessed;
+  if (pctSum !== 100 && controlAdequacy.total > 0) {
+    const diff = 100 - pctSum;
+    const largest = Object.entries(rawPcts).sort((a, b) => b[1] - a[1])[0][0] as keyof typeof ctrlPcts;
+    ctrlPcts[largest] += diff;
+  }
 
   const statCards: { label: string; value: number; Icon: LucideIcon; color: string; bg: string; filter: string }[] = [
     { label: 'Total Risks', value: stats.totalRisks, Icon: BarChart3, color: '#4ab0de', bg: 'rgba(74,176,222,0.1)', filter: 'all' },
@@ -287,7 +300,7 @@ export default function RiskManagerDashboard() {
           <div className="risk-card" style={{ padding: '22px' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
               <h2 style={{ fontSize: '15px', fontWeight: 600, margin: 0 }}>Risk Heat Map (Residual Risk)</h2>
-              <button className="btn-secondary" style={{ fontSize: '11px', padding: '4px 10px' }}>View Details</button>
+              <button className="btn-secondary" style={{ fontSize: '11px', padding: '4px 10px' }} onClick={() => router.push('/risk-manager/registry')}>View Details</button>
             </div>
 
             <div style={{ display: 'flex', gap: '8px', alignItems: 'flex-start' }}>
@@ -360,7 +373,7 @@ export default function RiskManagerDashboard() {
           <div className="risk-card" style={{ padding: '22px' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
               <h2 style={{ fontSize: '15px', fontWeight: 600, margin: 0 }}>Control Adequacy Rating</h2>
-              <button className="btn-secondary" style={{ fontSize: '11px', padding: '4px 10px' }}>Details</button>
+              <button className="btn-secondary" style={{ fontSize: '11px', padding: '4px 10px' }} onClick={() => router.push('/risk-manager/registry')}>Details</button>
             </div>
 
             {/* Donut-like visualization */}
@@ -368,20 +381,21 @@ export default function RiskManagerDashboard() {
               <div style={{ position: 'relative', width: '140px', height: '140px', flexShrink: 0 }}>
                 <svg viewBox="0 0 100 100" style={{ width: '100%', height: '100%', transform: 'rotate(-90deg)' }}>
                   {(() => {
-                    const segments = [
-                      { pct: ctrlPcts.effective, color: '#10b981' },
-                      { pct: ctrlPcts.partial, color: '#f59e0b' },
-                      { pct: ctrlPcts.ineffective, color: '#ef4444' },
-                      { pct: ctrlPcts.notAssessed, color: '#6a6a8a' },
+                    const raw = [
+                      { val: controlAdequacy.effective, color: '#10b981' },
+                      { val: controlAdequacy.partiallyEffective, color: '#f59e0b' },
+                      { val: controlAdequacy.ineffective, color: '#ef4444' },
+                      { val: controlAdequacy.notAssessed, color: '#6a6a8a' },
                     ];
+                    const total = controlAdequacy.total || 1;
+                    const circumference = 2 * Math.PI * 40;
                     let offset = 0;
-                    return segments.map((seg, idx) => {
-                      const circumference = 2 * Math.PI * 40;
-                      const dashLen = (seg.pct / 100) * circumference;
+                    return raw.filter(s => s.val > 0).map((seg, idx) => {
+                      const dashLen = (seg.val / total) * circumference;
                       const el = (
                         <circle key={idx} cx="50" cy="50" r="40" fill="none" stroke={seg.color}
                           strokeWidth="12" strokeDasharray={`${dashLen} ${circumference - dashLen}`}
-                          strokeDashoffset={-offset} strokeLinecap="round" style={{ opacity: 0.85 }} />
+                          strokeDashoffset={-offset} />
                       );
                       offset += dashLen;
                       return el;
@@ -490,7 +504,7 @@ export default function RiskManagerDashboard() {
           <div className="risk-card" style={{ padding: '22px' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
               <h2 style={{ fontSize: '15px', fontWeight: 600, margin: 0 }}>Risk Exposure by Strategic Objective</h2>
-              <button className="btn-secondary" style={{ fontSize: '11px', padding: '4px 10px' }}>View All</button>
+              <button className="btn-secondary" style={{ fontSize: '11px', padding: '4px 10px' }} onClick={() => router.push('/risk-manager/registry')}>View All</button>
             </div>
             <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
               {objEntries.slice(0, 5).map(([obj, vals]) => (

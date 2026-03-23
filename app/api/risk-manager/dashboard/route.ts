@@ -70,12 +70,24 @@ export async function GET(req: NextRequest) {
     }
   });
 
-  // Control adequacy breakdown
+  // Control adequacy breakdown (mutually exclusive buckets)
+  let ctrlEffective = 0, ctrlPartial = 0, ctrlIneffective = 0, ctrlNotAssessed = 0;
+  controls.forEach((c) => {
+    if (c.adequacy === "Adequate" || (!c.adequacy && c.effectivenessRating && c.effectivenessRating >= 4)) {
+      ctrlEffective++;
+    } else if (c.adequacy === "Needs Improvement" || (!c.adequacy && c.effectivenessRating && c.effectivenessRating >= 2 && c.effectivenessRating < 4)) {
+      ctrlPartial++;
+    } else if (c.adequacy === "Inadequate" || (!c.adequacy && c.effectivenessRating && c.effectivenessRating < 2)) {
+      ctrlIneffective++;
+    } else {
+      ctrlNotAssessed++;
+    }
+  });
   const controlAdequacy = {
-    effective: controls.filter((c) => c.adequacy === "Adequate" || (c.effectivenessRating && c.effectivenessRating >= 4)).length,
-    partiallyEffective: controls.filter((c) => c.adequacy === "Needs Improvement" || (c.effectivenessRating && c.effectivenessRating >= 2 && c.effectivenessRating < 4)).length,
-    ineffective: controls.filter((c) => c.adequacy === "Inadequate" || (c.effectivenessRating && c.effectivenessRating < 2)).length,
-    notAssessed: controls.filter((c) => !c.adequacy && !c.effectivenessRating).length,
+    effective: ctrlEffective,
+    partiallyEffective: ctrlPartial,
+    ineffective: ctrlIneffective,
+    notAssessed: ctrlNotAssessed,
     total: controls.length,
   };
 
@@ -120,7 +132,11 @@ export async function GET(req: NextRequest) {
       status: r.status,
       controlCount: r._count.controls,
       controlAdequacy: r.controls.length > 0
-        ? r.controls.some((c) => c.adequacy === "Inadequate") ? "Partial" : "Effective"
+        ? r.controls.every((c) => c.adequacy === "Adequate" || (c.effectivenessRating && c.effectivenessRating >= 4))
+          ? "Effective"
+          : r.controls.some((c) => c.adequacy === "Inadequate" || (c.effectivenessRating && c.effectivenessRating < 2))
+            ? "Ineffective"
+            : "Partial"
         : "None",
       reportedBy: r.reportedBy,
       strategicObjective: r.strategicObjective,

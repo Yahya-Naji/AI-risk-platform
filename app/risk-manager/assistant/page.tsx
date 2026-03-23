@@ -20,6 +20,7 @@ import {
   Users,
   Clock,
 } from 'lucide-react';
+import MarkdownRenderer from '@/components/MarkdownRenderer';
 
 type Mode = 'chat' | 'voice';
 type ConnectionState = 'disconnected' | 'connecting' | 'connected';
@@ -36,44 +37,6 @@ interface VoiceLog {
   type: 'system' | 'user' | 'assistant';
   text: string;
   timestamp: Date;
-}
-
-/** Render markdown-like text: **bold**, - bullets, newlines */
-function RichText({ text }: { text: string }) {
-  const lines = text.split('\n');
-  const elements: React.ReactNode[] = [];
-
-  lines.forEach((line, li) => {
-    const trimmed = line.trim();
-    if (!trimmed && li > 0) {
-      elements.push(<div key={`br-${li}`} style={{ height: '6px' }} />);
-      return;
-    }
-
-    const isBullet = /^[-•]\s+/.test(trimmed);
-    const content = isBullet ? trimmed.replace(/^[-•]\s+/, '') : trimmed;
-
-    const parts = content.split(/(\*\*[^*]+\*\*)/g);
-    const rendered = parts.map((part, pi) => {
-      if (part.startsWith('**') && part.endsWith('**')) {
-        return <strong key={pi} style={{ color: 'var(--text-primary)', fontWeight: 600 }}>{part.slice(2, -2)}</strong>;
-      }
-      return <span key={pi}>{part}</span>;
-    });
-
-    if (isBullet) {
-      elements.push(
-        <div key={li} style={{ display: 'flex', gap: '8px', paddingLeft: '4px', marginTop: '3px' }}>
-          <span style={{ color: 'var(--accent-cyan)', fontWeight: 700, flexShrink: 0 }}>•</span>
-          <span>{rendered}</span>
-        </div>
-      );
-    } else {
-      elements.push(<div key={li} style={{ marginTop: li > 0 ? '2px' : 0 }}>{rendered}</div>);
-    }
-  });
-
-  return <div style={{ lineHeight: 1.6 }}>{elements}</div>;
 }
 
 export default function RiskManagerAssistantPage() {
@@ -328,7 +291,7 @@ export default function RiskManagerAssistantPage() {
                       border: msg.role === 'user' ? 'none' : '1px solid var(--border-color)',
                       fontSize: '13px',
                     }}>
-                      {msg.role === 'assistant' ? <RichText text={msg.content} /> : msg.content}
+                      {msg.role === 'assistant' ? <MarkdownRenderer content={msg.content} /> : msg.content}
                     </div>
                   </div>
                   <div style={{ textAlign: msg.role === 'user' ? 'right' : 'left', marginLeft: msg.role === 'assistant' ? '38px' : '0', fontSize: '10px', color: 'var(--text-muted)', marginTop: '3px' }}>

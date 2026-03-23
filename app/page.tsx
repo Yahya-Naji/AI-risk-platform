@@ -351,6 +351,9 @@ export default function LandingPage() {
             <Link href="/executive/dashboard" className="px-5 py-2.5 rounded-lg text-sm font-medium text-white bg-white/15 backdrop-blur-md hover:bg-white/25 border border-white/20 transition-all no-underline">
               Executive Board
             </Link>
+            <Link href="/admin/overview" className="px-4 py-2 rounded-lg text-sm font-medium text-white/70 hover:text-white hover:bg-white/10 transition-all no-underline">
+              Admin
+            </Link>
           </div>
         </div>
       </header>
@@ -541,14 +544,14 @@ export default function LandingPage() {
               <h2 className="font-display text-4xl md:text-5xl font-extrabold mb-4">
                 <span className="gradient-text">How It Works</span>
               </h2>
-              <p className="text-lg text-[#6a6a8a]">Three lines of defence, fully digitised</p>
+              <p className="text-lg" style={{ color: 'var(--text-muted)' }}>Three lines of defence, fully digitised</p>
             </motion.div>
 
             <div className="relative">
               {/* Connecting line */}
-              <div className="hidden lg:block absolute top-[44px] left-[calc(16.67%+28px)] right-[calc(16.67%+28px)] h-px" style={{ background: 'linear-gradient(90deg, #4ab0de, #8b5cf6, #10b981)' }} />
+              <div className="hidden lg:block absolute top-[44px] left-[calc(12.5%+28px)] right-[calc(12.5%+28px)] h-px" style={{ background: 'linear-gradient(90deg, #4ab0de, #8b5cf6, #f59e0b, #10b981)' }} />
 
-              <div className="grid grid-cols-1 lg:grid-cols-3 gap-10">
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-10">
                 {steps.map((step, idx) => (
                   <motion.div
                     key={idx}
@@ -565,9 +568,9 @@ export default function LandingPage() {
                         </div>
                       </div>
                       <span className="text-xs font-bold tracking-widest" style={{ color: step.color }}>{step.num}</span>
-                      <h3 className="text-xl font-bold text-white mt-3 mb-2 font-display group-hover:text-[#4ab0de] transition-colors">{step.title}</h3>
+                      <h3 className="text-xl font-bold mt-3 mb-2 font-display transition-colors" style={{ color: 'var(--text-primary)' }}>{step.title}</h3>
                       <p className="text-sm font-semibold mb-4" style={{ color: step.color }}>{step.subtitle}</p>
-                      <p className="text-sm text-[#6a6a8a] leading-relaxed max-w-[300px] mx-auto">{step.desc}</p>
+                      <p className="text-sm leading-relaxed max-w-[280px] mx-auto" style={{ color: 'var(--text-muted)' }}>{step.desc}</p>
                     </Link>
                   </motion.div>
                 ))}
@@ -606,6 +609,9 @@ export default function LandingPage() {
               </Link>
               <Link href="/executive/dashboard" className="btn-secondary no-underline text-base px-6 py-4">
                 <Lock size={18} /> Executive Board
+              </Link>
+              <Link href="/admin/overview" className="btn-secondary no-underline text-base px-6 py-4">
+                <Shield size={18} /> Admin
               </Link>
             </div>
           </motion.div>

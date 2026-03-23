@@ -11,7 +11,6 @@ import {
   CircleCheck,
   Paperclip,
   AlertTriangle,
-  Filter,
 } from 'lucide-react';
 
 type TabKey = 'all' | 'overdue' | 'changes' | 'inprogress' | 'completed' | 'pending';
@@ -111,15 +110,6 @@ export default function MyTasksPage() {
         return map[activeTab]?.includes(t.status);
       });
 
-  const tabs: { key: TabKey; label: string; count: number; Icon: typeof CheckCircle }[] = [
-    { key: 'all', label: 'All', count: counts.all, Icon: Filter },
-    { key: 'overdue', label: 'Overdue', count: counts.overdue, Icon: AlertCircle },
-    { key: 'changes', label: 'Changes', count: counts.changes, Icon: RefreshCw },
-    { key: 'inprogress', label: 'In Progress', count: counts.inprogress, Icon: Clock },
-    { key: 'completed', label: 'Done', count: counts.completed, Icon: CircleCheck },
-    { key: 'pending', label: 'Pending', count: counts.pending, Icon: CheckCircle },
-  ];
-
   return (
     <div style={{ display: 'flex', height: '100vh', background: 'var(--bg-primary)', color: 'var(--text-primary)', overflow: 'hidden' }}>
       <Sidebar role="business-owner" />
@@ -133,16 +123,25 @@ export default function MyTasksPage() {
           </p>
         </div>
 
-        {/* Stats */}
+        {/* Stats (clickable filters) */}
         <div className="animate-fade-up-1" style={{ display: 'grid', gridTemplateColumns: 'repeat(5, 1fr)', gap: '12px' }}>
           {[
-            { label: 'Total', value: counts.all, color: '#4ab0de', bg: 'rgba(74,176,222,0.1)', Icon: CheckCircle },
-            { label: 'Overdue', value: counts.overdue, color: '#ef4444', bg: 'rgba(239,68,68,0.12)', Icon: AlertCircle },
-            { label: 'Changes', value: counts.changes, color: '#f59e0b', bg: 'rgba(245,158,11,0.1)', Icon: RefreshCw },
-            { label: 'In Progress', value: counts.inprogress, color: '#4ab0de', bg: 'rgba(74,176,222,0.1)', Icon: Clock },
-            { label: 'Done', value: counts.completed, color: '#10b981', bg: 'rgba(16,185,129,0.1)', Icon: CircleCheck },
+            { key: 'all' as TabKey, label: 'Total', value: counts.all, color: '#4ab0de', bg: 'rgba(74,176,222,0.1)', Icon: CheckCircle },
+            { key: 'overdue' as TabKey, label: 'Overdue', value: counts.overdue, color: '#ef4444', bg: 'rgba(239,68,68,0.12)', Icon: AlertCircle },
+            { key: 'changes' as TabKey, label: 'Changes', value: counts.changes, color: '#f59e0b', bg: 'rgba(245,158,11,0.1)', Icon: RefreshCw },
+            { key: 'inprogress' as TabKey, label: 'In Progress', value: counts.inprogress, color: '#4ab0de', bg: 'rgba(74,176,222,0.1)', Icon: Clock },
+            { key: 'completed' as TabKey, label: 'Done', value: counts.completed, color: '#10b981', bg: 'rgba(16,185,129,0.1)', Icon: CircleCheck },
           ].map((stat) => (
-            <div key={stat.label} className="risk-card" style={{ padding: '16px', display: 'flex', alignItems: 'center', gap: '12px' }}>
+            <div key={stat.label} className="risk-card"
+              onClick={() => setActiveTab(stat.key)}
+              style={{
+                padding: '16px', display: 'flex', alignItems: 'center', gap: '12px', cursor: 'pointer', transition: 'all 0.2s',
+                borderColor: activeTab === stat.key ? stat.color : undefined,
+                boxShadow: activeTab === stat.key ? `0 0 20px ${stat.color}25` : undefined,
+              }}
+              onMouseEnter={(e) => { (e.currentTarget as HTMLDivElement).style.transform = 'translateY(-2px)'; (e.currentTarget as HTMLDivElement).style.borderColor = stat.color; }}
+              onMouseLeave={(e) => { (e.currentTarget as HTMLDivElement).style.transform = 'none'; if (activeTab !== stat.key) (e.currentTarget as HTMLDivElement).style.borderColor = 'var(--border-color)'; }}
+            >
               <div style={{ width: '38px', height: '38px', borderRadius: '10px', background: stat.bg, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
                 <stat.Icon size={18} color={stat.color} />
               </div>
@@ -156,33 +155,6 @@ export default function MyTasksPage() {
 
         {/* Table Card */}
         <div className="risk-card animate-fade-up-2" style={{ padding: 0, overflow: 'hidden' }}>
-          {/* Tabs */}
-          <div style={{ display: 'flex', gap: '2px', borderBottom: '1px solid var(--border-color)', padding: '12px 18px 0', overflowX: 'auto' }}>
-            {tabs.map((tab) => (
-              <button
-                key={tab.key}
-                onClick={() => setActiveTab(tab.key)}
-                style={{
-                  padding: '7px 12px', fontSize: '12px',
-                  fontWeight: activeTab === tab.key ? 600 : 400,
-                  color: activeTab === tab.key ? 'var(--accent-cyan)' : 'var(--text-muted)',
-                  background: 'transparent', border: 'none',
-                  borderBottom: activeTab === tab.key ? '2px solid var(--accent-cyan)' : '2px solid transparent',
-                  cursor: 'pointer', whiteSpace: 'nowrap', display: 'flex', alignItems: 'center', gap: '5px',
-                }}
-              >
-                <tab.Icon size={12} />
-                {tab.label}
-                <span style={{
-                  background: activeTab === tab.key ? 'rgba(74,176,222,0.2)' : 'rgba(160,160,192,0.1)',
-                  color: activeTab === tab.key ? 'var(--accent-cyan)' : 'var(--text-muted)',
-                  padding: '1px 6px', borderRadius: '10px', fontSize: '10px', fontWeight: 600,
-                }}>
-                  {tab.count}
-                </span>
-              </button>
-            ))}
-          </div>
 
           {/* Table */}
           <div style={{ overflowX: 'auto' }}>
