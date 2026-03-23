@@ -316,20 +316,46 @@ Return ONLY valid JSON, no markdown.`;
   const handleFileUpload = async (files: FileList | null) => {
     if (!files || !task) return;
     setUploading(true);
+    const newEvidence: EvidenceFile[] = [];
     for (let i = 0; i < files.length; i++) {
       const file = files[i];
-      const formData = new FormData();
-      formData.append('file', file);
-      formData.append('taskId', task.taskId);
+      const fd = new FormData();
+      fd.append('file', file);
+      fd.append('taskId', task.taskId);
       try {
-        await fetch('/api/business-owner/tasks/upload', {
+        const res = await fetch('/api/business-owner/tasks/upload', {
           method: 'POST',
-          body: formData,
+          body: fd,
         });
+        if (res.ok) {
+          const evidence = await res.json();
+          newEvidence.push(evidence);
+        }
       } catch { /* */ }
     }
+    // Update task evidence without resetting form fields
+    if (newEvidence.length > 0) {
+      setTask((prev) => prev ? { ...prev, evidence: [...prev.evidence, ...newEvidence], evidenceCount: prev.evidenceCount + newEvidence.length } : prev);
+    }
     setUploading(false);
-    loadTask();
+    // Reset file input
+    const input = document.getElementById('file-upload-input') as HTMLInputElement;
+    if (input) input.value = '';
+  };
+
+  /* ── Delete evidence ─────────────────────────────────────────────────────── */
+  const handleDeleteEvidence = async (evidenceId: string) => {
+    if (!task) return;
+    try {
+      const res = await fetch(`/api/business-owner/tasks/upload?id=${evidenceId}`, { method: 'DELETE' });
+      if (res.ok) {
+        setTask((prev) => prev ? {
+          ...prev,
+          evidence: prev.evidence.filter((e) => e.id !== evidenceId),
+          evidenceCount: prev.evidenceCount - 1,
+        } : prev);
+      }
+    } catch { /* */ }
   };
 
   /* ── Add comment ────────────────────────────────────────────────────────── */
@@ -627,13 +653,29 @@ Return ONLY valid JSON, no markdown.`;
                           </div>
                         </div>
                       </div>
-                      <span style={{
-                        fontSize: '11px', padding: '3px 8px', borderRadius: '5px', fontWeight: 500,
-                        background: 'rgba(16,185,129,0.15)', color: '#10b981',
-                        display: 'flex', alignItems: 'center', gap: '4px',
-                      }}>
-                        <Check size={10} /> Uploaded
-                      </span>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                        <span style={{
+                          fontSize: '11px', padding: '3px 8px', borderRadius: '5px', fontWeight: 500,
+                          background: 'rgba(16,185,129,0.15)', color: '#10b981',
+                          display: 'flex', alignItems: 'center', gap: '4px',
+                        }}>
+                          <Check size={10} /> Uploaded
+                        </span>
+                        <button
+                          onClick={(e) => { e.stopPropagation(); handleDeleteEvidence(file.id); }}
+                          style={{
+                            width: '26px', height: '26px', borderRadius: '6px',
+                            background: 'rgba(239,68,68,0.1)', border: '1px solid rgba(239,68,68,0.2)',
+                            cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center',
+                            transition: 'all 0.15s',
+                          }}
+                          onMouseEnter={(e) => { (e.currentTarget as HTMLButtonElement).style.background = 'rgba(239,68,68,0.2)'; }}
+                          onMouseLeave={(e) => { (e.currentTarget as HTMLButtonElement).style.background = 'rgba(239,68,68,0.1)'; }}
+                          title="Remove file"
+                        >
+                          <XCircle size={12} color="#ef4444" />
+                        </button>
+                      </div>
                     </div>
                   ))}
                 </div>

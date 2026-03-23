@@ -27,7 +27,7 @@ export async function GET(req: NextRequest) {
       select: {
         id: true, riskId: true, title: true, category: true, department: true,
         likelihood: true, impact: true, inherentScore: true, riskLevel: true,
-        status: true, fraudRisk: true, createdAt: true, assignedToId: true,
+        status: true, fraudRisk: true, fraudCategory1: true, createdAt: true, assignedToId: true,
         reportedBy: { select: { name: true, avatar: true } },
         assignedTo: { select: { name: true, avatar: true } },
         _count: { select: { controls: true, tasks: true } },
@@ -132,6 +132,14 @@ export async function GET(req: NextRequest) {
       mitigated: byStatus["MITIGATED"] || 0,
       fraudCount: filteredRisks.filter((r) => r.fraudRisk).length,
     },
+    fraudByCategory: (() => {
+      const fbc: Record<string, number> = {};
+      filteredRisks.filter((r) => r.fraudRisk).forEach((r) => {
+        const cat = (r as Record<string, unknown>).fraudCategory1 as string || 'Uncategorized';
+        fbc[cat] = (fbc[cat] || 0) + 1;
+      });
+      return fbc;
+    })(),
     rmPerformance, heatMap, byCategory, byDepartment, byLevel, byStatus,
     controlAdequacy, recentRisks, boActivity,
   });

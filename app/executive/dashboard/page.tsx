@@ -98,28 +98,24 @@ function getHeatBg(li: number, imp: number): string {
   return 'rgba(16,185,129,0.15)';
 }
 
-function StatCard({ label, value, suffix, color, icon: Icon, trend, active, onClick }: {
-  label: string; value: number | string; suffix?: string; color: string; icon: LucideIcon; trend?: string; active?: boolean; onClick?: () => void;
+function StatCard({ label, value, suffix, color, icon: Icon, active, onClick }: {
+  label: string; value: number | string; suffix?: string; color: string; icon: LucideIcon; active?: boolean; onClick?: () => void;
 }) {
   return (
-    <div className="risk-card" onClick={onClick} style={{ padding: '18px', cursor: 'pointer', transition: 'all 0.2s', borderColor: active ? color : undefined, boxShadow: active ? `0 0 20px ${color}25` : undefined }}
+    <div className="risk-card" onClick={onClick}
+      style={{ padding: '14px 16px', cursor: 'pointer', transition: 'all 0.2s', display: 'flex', alignItems: 'center', gap: '12px', borderColor: active ? color : undefined, boxShadow: active ? `0 0 20px ${color}25` : undefined }}
       onMouseEnter={(e) => { (e.currentTarget as HTMLDivElement).style.borderColor = color; (e.currentTarget as HTMLDivElement).style.transform = 'translateY(-2px)'; }}
       onMouseLeave={(e) => { if (!active) (e.currentTarget as HTMLDivElement).style.borderColor = 'var(--border-color)'; (e.currentTarget as HTMLDivElement).style.transform = 'none'; }}
     >
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '10px' }}>
-        <div style={{ width: '40px', height: '40px', borderRadius: '10px', background: `${color}15`, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-          <Icon size={18} style={{ color }} />
+      <div style={{ width: '38px', height: '38px', borderRadius: '10px', background: `${color}15`, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+        <Icon size={18} style={{ color }} />
+      </div>
+      <div>
+        <div style={{ fontSize: '22px', fontWeight: 700, color, lineHeight: 1 }}>
+          {value}<span style={{ fontSize: '13px', color: 'var(--text-muted)' }}>{suffix}</span>
         </div>
-        {trend && (
-          <span style={{ fontSize: '11px', padding: '3px 6px', borderRadius: '4px', background: trend.startsWith('+') ? 'rgba(239,68,68,0.1)' : 'rgba(16,185,129,0.1)', color: trend.startsWith('+') ? '#ef4444' : '#10b981' }}>
-            {trend}
-          </span>
-        )}
+        <div style={{ fontSize: '11px', color: 'var(--text-muted)', marginTop: '3px' }}>{label}</div>
       </div>
-      <div style={{ fontSize: '28px', fontWeight: 700, lineHeight: 1 }}>
-        {value}<span style={{ fontSize: '16px', color: 'var(--text-muted)' }}>{suffix}</span>
-      </div>
-      <div style={{ fontSize: '12px', color: 'var(--text-muted)', marginTop: '2px' }}>{label}</div>
     </div>
   );
 }
@@ -236,35 +232,6 @@ export default function ExecutiveDashboard() {
           </div>
         </div>
 
-        {/* KPI Stats */}
-        <div className="animate-fade-up-1" style={{ display: 'grid', gridTemplateColumns: 'repeat(5, 1fr)', gap: '14px' }}>
-          <StatCard label="% Risks Critical & High" value={stats.criticalHighPct} suffix="%" color="#ef4444" icon={AlertTriangle} active={crossFilter?.value === 'critical-high'} onClick={() => toggleCross('level', 'critical-high')} />
-          <StatCard label="Total Risks Logged" value={stats.totalRisks} color="#4ab0de" icon={BarChart3} active={!crossFilter} onClick={() => setCrossFilter(null)} />
-          <StatCard label="Pending Review" value={stats.pendingReview} color="#8b5cf6" icon={Clock} active={crossFilter?.value === 'pending'} onClick={() => toggleCross('status', 'pending')} />
-          <StatCard label="Mitigated Risks" value={stats.mitigated} color="#10b981" icon={CheckCircle} active={crossFilter?.value === 'mitigated'} onClick={() => toggleCross('status', 'mitigated')} />
-          <StatCard label="Overdue Tasks" value={stats.overdueTasks} color="#ef4444" icon={AlertTriangle} active={crossFilter?.value === 'overdue'} onClick={() => toggleCross('status', 'overdue')} />
-        </div>
-
-        {/* Escalation Banner */}
-        {stats.overdueTasks > 0 && (
-          <div className="animate-fade-up-1" style={{
-            padding: '14px 20px', borderRadius: '12px', display: 'flex', alignItems: 'center', gap: '14px',
-            background: 'linear-gradient(135deg, rgba(239,68,68,0.12), rgba(139,92,246,0.08))',
-            border: '1px solid rgba(239,68,68,0.3)',
-          }}>
-            <div style={{ width: '44px', height: '44px', borderRadius: '10px', background: 'rgba(239,68,68,0.15)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
-              <AlertTriangle size={20} style={{ color: '#ef4444' }} />
-            </div>
-            <div style={{ flex: 1 }}>
-              <div style={{ fontSize: '14px', fontWeight: 600 }}>Board Escalation Required &mdash; {stats.overdueTasks} Overdue Tasks</div>
-              <div style={{ fontSize: '12px', color: 'var(--text-secondary)' }}>
-                {teamActivity.filter((t) => t.overdue > 0).map((t) => `${t.name} (${t.department}) has ${t.overdue} overdue`).join(' · ')}
-              </div>
-            </div>
-            <span style={{ padding: '6px 16px', background: '#ef4444', borderRadius: '8px', color: '#fff', fontSize: '12px', fontWeight: 600, whiteSpace: 'nowrap', cursor: 'pointer' }}>View Escalations</span>
-          </div>
-        )}
-
         {/* Org Hierarchy Filter */}
         <div className="animate-fade-up-2 risk-card" style={{ padding: '16px 20px' }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '12px' }}>
@@ -323,6 +290,15 @@ export default function ExecutiveDashboard() {
           </div>
         </div>
 
+        {/* KPI Stats */}
+        <div className="animate-fade-up-1" style={{ display: 'grid', gridTemplateColumns: 'repeat(5, 1fr)', gap: '14px' }}>
+          <StatCard label="% Risks Critical & High" value={stats.criticalHighPct} suffix="%" color="#ef4444" icon={AlertTriangle} active={crossFilter?.value === 'critical-high'} onClick={() => toggleCross('level', 'critical-high')} />
+          <StatCard label="Total Risks Logged" value={stats.totalRisks} color="#4ab0de" icon={BarChart3} active={!crossFilter} onClick={() => setCrossFilter(null)} />
+          <StatCard label="Pending Review" value={stats.pendingReview} color="#8b5cf6" icon={Clock} active={crossFilter?.value === 'pending'} onClick={() => toggleCross('status', 'pending')} />
+          <StatCard label="Mitigated Risks" value={stats.mitigated} color="#10b981" icon={CheckCircle} active={crossFilter?.value === 'mitigated'} onClick={() => toggleCross('status', 'mitigated')} />
+          <StatCard label="Overdue Tasks" value={stats.overdueTasks} color="#ef4444" icon={AlertTriangle} active={crossFilter?.value === 'overdue'} onClick={() => toggleCross('status', 'overdue')} />
+        </div>
+
         {/* Fraud Risks */}
         {stats.fraudTotal > 0 && (
           <div className="risk-card" style={{ padding: '16px 20px' }}>
@@ -354,6 +330,26 @@ export default function ExecutiveDashboard() {
                 );
               })}
             </div>
+          </div>
+        )}
+
+        {/* Escalation Banner */}
+        {stats.overdueTasks > 0 && (
+          <div className="animate-fade-up-1" style={{
+            padding: '14px 20px', borderRadius: '12px', display: 'flex', alignItems: 'center', gap: '14px',
+            background: 'linear-gradient(135deg, rgba(239,68,68,0.12), rgba(139,92,246,0.08))',
+            border: '1px solid rgba(239,68,68,0.3)',
+          }}>
+            <div style={{ width: '44px', height: '44px', borderRadius: '10px', background: 'rgba(239,68,68,0.15)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+              <AlertTriangle size={20} style={{ color: '#ef4444' }} />
+            </div>
+            <div style={{ flex: 1 }}>
+              <div style={{ fontSize: '14px', fontWeight: 600 }}>Board Escalation Required &mdash; {stats.overdueTasks} Overdue Tasks</div>
+              <div style={{ fontSize: '12px', color: 'var(--text-secondary)' }}>
+                {teamActivity.filter((t) => t.overdue > 0).map((t) => `${t.name} (${t.department}) has ${t.overdue} overdue`).join(' · ')}
+              </div>
+            </div>
+            <span style={{ padding: '6px 16px', background: '#ef4444', borderRadius: '8px', color: '#fff', fontSize: '12px', fontWeight: 600, whiteSpace: 'nowrap', cursor: 'pointer' }}>View Escalations</span>
           </div>
         )}
 

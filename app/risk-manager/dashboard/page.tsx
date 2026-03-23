@@ -126,7 +126,7 @@ export default function RiskManagerDashboard() {
     );
   }
 
-  const { stats, heatMap, controlAdequacy, byDepartment, byCategory, recentHighPriority, byObjective } = data;
+  const { stats, fraudRisks, heatMap, controlAdequacy, byDepartment, byCategory, recentHighPriority, byObjective } = data;
 
   // Compute chart maximums
   const deptEntries = Object.entries(byDepartment);
@@ -294,6 +294,39 @@ export default function RiskManagerDashboard() {
           })}
         </div>
 
+        {/* Fraud Risks */}
+        {fraudRisks.total > 0 && (
+          <div className="risk-card animate-fade-up-2" style={{ padding: '16px 20px' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '12px' }}>
+              <span style={{ fontSize: '14px', fontWeight: 600, display: 'flex', alignItems: 'center', gap: '8px' }}>
+                <AlertTriangle size={16} style={{ color: '#ef4444' }} /> Fraud Risks
+              </span>
+              <span style={{ fontSize: '20px', fontWeight: 700, color: '#ef4444' }}>{fraudRisks.total}</span>
+            </div>
+            <div style={{ display: 'flex', gap: '12px', marginBottom: '12px', flexWrap: 'wrap' }}>
+              {Object.entries(fraudRisks.byCategory).map(([cat, count], idx) => {
+                const colors = ['#ef4444', '#f59e0b', '#8b5cf6', '#4ab0de'];
+                const color = colors[idx % colors.length];
+                return (
+                  <div key={cat} style={{ flex: 1, minWidth: '120px', display: 'flex', alignItems: 'center', gap: '10px', padding: '10px 14px', background: 'var(--bg-secondary)', borderRadius: '8px' }}>
+                    <div style={{ width: '10px', height: '10px', borderRadius: '3px', background: color, flexShrink: 0 }} />
+                    <span style={{ flex: 1, fontSize: '12px', color: 'var(--text-secondary)' }}>{cat}</span>
+                    <span style={{ fontSize: '16px', fontWeight: 700, color }}>{count}</span>
+                  </div>
+                );
+              })}
+            </div>
+            <div style={{ display: 'flex', height: '8px', borderRadius: '4px', overflow: 'hidden' }}>
+              {Object.entries(fraudRisks.byCategory).map(([cat, count], idx) => {
+                const colors = ['#ef4444', '#f59e0b', '#8b5cf6', '#4ab0de'];
+                return (
+                  <div key={cat} style={{ width: `${(count / fraudRisks.total) * 100}%`, height: '100%', background: colors[idx % colors.length] }} />
+                );
+              })}
+            </div>
+          </div>
+        )}
+
         {/* Heat Map + Control Adequacy */}
         <div className="animate-fade-up-2" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' }}>
           {/* Heat Map */}
@@ -377,28 +410,33 @@ export default function RiskManagerDashboard() {
             </div>
 
             {/* Donut-like visualization */}
-            <div style={{ display: 'flex', alignItems: 'center', gap: '28px' }}>
-              <div style={{ position: 'relative', width: '140px', height: '140px', flexShrink: 0 }}>
-                <svg viewBox="0 0 100 100" style={{ width: '100%', height: '100%', transform: 'rotate(-90deg)' }}>
+            <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '20px' }}>
+              <div style={{ position: 'relative', width: '200px', height: '200px' }}>
+                <svg viewBox="0 0 100 100" style={{ width: '100%', height: '100%' }}>
                   {(() => {
                     const raw = [
                       { val: controlAdequacy.effective, color: '#10b981' },
                       { val: controlAdequacy.partiallyEffective, color: '#f59e0b' },
                       { val: controlAdequacy.ineffective, color: '#ef4444' },
                       { val: controlAdequacy.notAssessed, color: '#6a6a8a' },
-                    ];
+                    ].filter(s => s.val > 0);
                     const total = controlAdequacy.total || 1;
-                    const circumference = 2 * Math.PI * 40;
-                    let offset = 0;
-                    return raw.filter(s => s.val > 0).map((seg, idx) => {
-                      const dashLen = (seg.val / total) * circumference;
-                      const el = (
-                        <circle key={idx} cx="50" cy="50" r="40" fill="none" stroke={seg.color}
-                          strokeWidth="12" strokeDasharray={`${dashLen} ${circumference - dashLen}`}
-                          strokeDashoffset={-offset} />
+                    let cumulative = 0;
+                    return raw.map((seg, idx) => {
+                      const pct = (seg.val / total) * 100;
+                      const startAngle = (cumulative / 100) * 360 - 90;
+                      const endAngle = ((cumulative + pct) / 100) * 360 - 90;
+                      cumulative += pct;
+                      const r = 40;
+                      const x1 = 50 + r * Math.cos((startAngle * Math.PI) / 180);
+                      const y1 = 50 + r * Math.sin((startAngle * Math.PI) / 180);
+                      const x2 = 50 + r * Math.cos((endAngle * Math.PI) / 180);
+                      const y2 = 50 + r * Math.sin((endAngle * Math.PI) / 180);
+                      const largeArc = pct > 50 ? 1 : 0;
+                      const d = `M ${x1} ${y1} A ${r} ${r} 0 ${largeArc} 1 ${x2} ${y2}`;
+                      return (
+                        <path key={idx} d={d} fill="none" stroke={seg.color} strokeWidth="12" />
                       );
-                      offset += dashLen;
-                      return el;
                     });
                   })()}
                 </svg>
@@ -408,17 +446,17 @@ export default function RiskManagerDashboard() {
                 </div>
               </div>
 
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', flex: 1 }}>
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px', width: '100%' }}>
                 {[
                   { label: 'Effective', pct: ctrlPcts.effective, color: '#10b981' },
                   { label: 'Partially Effective', pct: ctrlPcts.partial, color: '#f59e0b' },
                   { label: 'Ineffective', pct: ctrlPcts.ineffective, color: '#ef4444' },
                   { label: 'Not Assessed', pct: ctrlPcts.notAssessed, color: '#6a6a8a' },
                 ].map((item) => (
-                  <div key={item.label} style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                  <div key={item.label} style={{ display: 'flex', alignItems: 'center', gap: '8px', padding: '8px 12px', background: 'var(--bg-primary)', borderRadius: '8px' }}>
                     <div style={{ width: '10px', height: '10px', borderRadius: '2px', background: item.color, flexShrink: 0 }} />
                     <span style={{ fontSize: '12px', color: 'var(--text-secondary)', flex: 1 }}>{item.label}</span>
-                    <span style={{ fontSize: '13px', fontWeight: 600, color: 'var(--text-primary)' }}>{item.pct}%</span>
+                    <span style={{ fontSize: '13px', fontWeight: 700, color: item.color }}>{item.pct}%</span>
                   </div>
                 ))}
               </div>

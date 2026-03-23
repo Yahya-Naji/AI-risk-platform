@@ -35,6 +35,7 @@ interface DashboardData {
     reportedBy: string; assignedTo: string; controlCount: number; taskCount: number; createdAt: string;
   }[];
   boActivity: { id: string; name: string; avatar: string; department: string; company: string; risksReported: number; tasks: number }[];
+  fraudByCategory: Record<string, number>;
 }
 
 const CATEGORY_LABELS: Record<string, string> = {
@@ -115,7 +116,7 @@ export default function ChiefRiskManagerDashboard() {
     );
   }
 
-  const { stats, rmPerformance, heatMap, byCategory, byDepartment, byLevel, controlAdequacy, recentRisks, boActivity } = data;
+  const { stats, fraudByCategory, rmPerformance, heatMap, byCategory, byDepartment, byLevel, controlAdequacy, recentRisks, boActivity } = data;
   const selectStyle: React.CSSProperties = {
     width: '100%', padding: '10px 12px', background: 'var(--bg-secondary)',
     border: '1px solid var(--border-color)', borderRadius: '8px', fontSize: '12px',
@@ -188,6 +189,39 @@ export default function ChiefRiskManagerDashboard() {
           <StatCard label="Overdue Tasks" value={stats.overdueTasks} color="#ef4444" icon={AlertTriangle} active={highlight === 'overdue'} onClick={() => toggleHL('overdue')} />
           <StatCard label="Mitigated" value={stats.mitigated} color="#10b981" icon={CheckCircle} active={highlight === 'mitigated'} onClick={() => toggleHL('mitigated')} />
         </div>
+
+        {/* Fraud Risks */}
+        {stats.fraudCount > 0 && fraudByCategory && Object.keys(fraudByCategory).length > 0 && (
+          <div className="risk-card" style={{ padding: '16px 20px' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '12px' }}>
+              <span style={{ fontSize: '14px', fontWeight: 600, display: 'flex', alignItems: 'center', gap: '8px' }}>
+                <AlertTriangle size={16} style={{ color: '#ef4444' }} /> Fraud Risks
+              </span>
+              <span style={{ fontSize: '20px', fontWeight: 700, color: '#ef4444' }}>{stats.fraudCount}</span>
+            </div>
+            <div style={{ display: 'flex', gap: '12px', marginBottom: '12px', flexWrap: 'wrap' }}>
+              {Object.entries(fraudByCategory).map(([cat, count], idx) => {
+                const colors = ['#ef4444', '#f59e0b', '#8b5cf6', '#4ab0de'];
+                const color = colors[idx % colors.length];
+                return (
+                  <div key={cat} style={{ flex: 1, minWidth: '120px', display: 'flex', alignItems: 'center', gap: '10px', padding: '10px 14px', background: 'var(--bg-secondary)', borderRadius: '8px' }}>
+                    <div style={{ width: '10px', height: '10px', borderRadius: '3px', background: color, flexShrink: 0 }} />
+                    <span style={{ flex: 1, fontSize: '12px', color: 'var(--text-secondary)' }}>{cat}</span>
+                    <span style={{ fontSize: '16px', fontWeight: 700, color }}>{count}</span>
+                  </div>
+                );
+              })}
+            </div>
+            <div style={{ display: 'flex', height: '8px', borderRadius: '4px', overflow: 'hidden' }}>
+              {Object.entries(fraudByCategory).map(([cat, count], idx) => {
+                const colors = ['#ef4444', '#f59e0b', '#8b5cf6', '#4ab0de'];
+                return (
+                  <div key={cat} style={{ width: `${(count / stats.fraudCount) * 100}%`, height: '100%', background: colors[idx % colors.length] }} />
+                );
+              })}
+            </div>
+          </div>
+        )}
 
         {/* Risk Manager Performance Table */}
         <div className="risk-card" style={{ padding: '18px' }}>

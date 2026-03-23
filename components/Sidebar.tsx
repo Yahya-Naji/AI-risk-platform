@@ -20,6 +20,7 @@ import {
   type LucideIcon,
 } from 'lucide-react';
 import { useTheme } from '@/components/ThemeProvider';
+import NotificationBell from '@/components/NotificationBell';
 
 type Role = 'business-owner' | 'risk-manager' | 'admin' | 'chief-risk-manager' | 'executive';
 
@@ -120,12 +121,12 @@ export default function Sidebar({ role }: SidebarProps) {
           { icon: Home, label: 'Dashboard', href: '/risk-manager/dashboard' },
           { icon: ClipboardList, label: 'Risk Registry', href: '/risk-manager/registry' },
           { icon: Search, label: 'Pending Review', href: '/risk-manager/review' },
+          { icon: CheckSquare, label: 'Task Review', href: '/risk-manager/tasks' },
         ],
       },
       {
         title: 'ACTIONS',
         items: [
-          { icon: CheckSquare, label: 'Controls', href: '/risk-manager/registry' },
           { icon: Bot, label: 'AI Risk Assistant', href: '/risk-manager/assistant' },
         ],
       },
@@ -135,6 +136,7 @@ export default function Sidebar({ role }: SidebarProps) {
         title: 'ADMIN',
         items: [
           { icon: Users, label: 'User Management', href: '/admin/users' },
+          { icon: ClipboardList, label: 'Workflows', href: '/admin/workflows' },
         ],
       },
     ],
@@ -213,6 +215,14 @@ export default function Sidebar({ role }: SidebarProps) {
           </div>
         </div>
       </Link>
+
+      {/* Notification Bell */}
+      {user?.id && (
+        <div style={{ padding: '8px 16px', borderBottom: '1px solid var(--border-color)', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+          <span style={{ fontSize: '10px', color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.5px', fontWeight: 600 }}>Alerts</span>
+          <NotificationBell userId={user.id} />
+        </div>
+      )}
 
       {/* Department Badge */}
       <div style={{ padding: '12px 16px', borderBottom: '1px solid var(--border-color)' }}>

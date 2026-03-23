@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/db";
-import { writeFile, mkdir } from "fs/promises";
+import { writeFile, mkdir, unlink } from "fs/promises";
 import path from "path";
 
 export async function POST(request: Request) {
@@ -54,5 +54,35 @@ export async function POST(request: Request) {
       { error: "Failed to upload file" },
       { status: 500 }
     );
+  }
+}
+
+export async function DELETE(request: Request) {
+  const { searchParams } = new URL(request.url);
+  const id = searchParams.get("id");
+
+  if (!id) {
+    return NextResponse.json({ error: "id required" }, { status: 400 });
+  }
+
+  try {
+    const evidence = await prisma.evidence.findUnique({ where: { id } });
+    if (!evidence) {
+      return NextResponse.json({ error: "Not found" }, { status: 404 });
+    }
+
+    // Delete physical file if it exists
+    if (evidence.url) {
+      try {
+        const filePath = path.join(process.cwd(), "public", evidence.url);
+        await unlink(filePath);
+      } catch { /* file may not exist */ }
+    }
+
+    await prisma.evidence.delete({ where: { id } });
+    return NextResponse.json({ success: true });
+  } catch (error) {
+    console.error("Delete error:", error);
+    return NextResponse.json({ error: "Failed to delete" }, { status: 500 });
   }
 }
