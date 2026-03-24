@@ -17,6 +17,7 @@ import {
   FolderOpen,
   Sun,
   Moon,
+  Upload,
   type LucideIcon,
 } from 'lucide-react';
 import { useTheme } from '@/components/ThemeProvider';
@@ -127,6 +128,7 @@ export default function Sidebar({ role }: SidebarProps) {
       {
         title: 'ACTIONS',
         items: [
+          { icon: MessageSquare, label: 'Report Risk', href: '/business-owner/report-risk' },
           { icon: Bot, label: 'AI Risk Assistant', href: '/risk-manager/assistant' },
         ],
       },
@@ -137,6 +139,9 @@ export default function Sidebar({ role }: SidebarProps) {
         items: [
           { icon: Users, label: 'User Management', href: '/admin/users' },
           { icon: ClipboardList, label: 'Workflows', href: '/admin/workflows' },
+          { icon: Upload, label: 'Bulk Import', href: '/admin/import' },
+          { icon: ClipboardList, label: 'Form Builder', href: '/admin/form-builder' },
+          { icon: FolderOpen, label: 'Repositories', href: '/admin/repositories' },
         ],
       },
     ],
@@ -145,13 +150,14 @@ export default function Sidebar({ role }: SidebarProps) {
         title: 'OVERVIEW',
         items: [
           { icon: Home, label: 'Dashboard', href: '/chief-risk-manager/dashboard' },
-          { icon: ClipboardList, label: 'Risk Registry', href: '/risk-manager/registry' },
+          { icon: ClipboardList, label: 'Risk Registry', href: '/chief-risk-manager/registry' },
           { icon: Search, label: 'Pending Review', href: '/risk-manager/review' },
         ],
       },
       {
         title: 'TOOLS',
         items: [
+          { icon: MessageSquare, label: 'Report Risk', href: '/business-owner/report-risk' },
           { icon: Bot, label: 'AI Risk Assistant', href: '/risk-manager/assistant' },
         ],
       },
@@ -161,7 +167,8 @@ export default function Sidebar({ role }: SidebarProps) {
         title: 'BOARD',
         items: [
           { icon: Home, label: 'Board Dashboard', href: '/executive/dashboard' },
-          { icon: BarChart3, label: 'Risk Portfolio', href: '/risk-manager/registry' },
+          { icon: BarChart3, label: 'Risk Portfolio', href: '/executive/registry' },
+          { icon: MessageSquare, label: 'Report Risk', href: '/business-owner/report-risk' },
         ],
       },
     ],

@@ -3,6 +3,7 @@ import { Sora, DM_Sans, Geist } from "next/font/google";
 import "./globals.css";
 import { cn } from "@/lib/utils";
 import ThemeProvider from "@/components/ThemeProvider";
+import FloatingChat from "@/components/FloatingChat";
 
 const geist = Geist({subsets:['latin'],variable:'--font-sans'});
 
@@ -43,6 +44,7 @@ export default function RootLayout({
       <body className={dmSans.className}>
         <ThemeProvider>
           {children}
+          <FloatingChat />
         </ThemeProvider>
       </body>
     </html>

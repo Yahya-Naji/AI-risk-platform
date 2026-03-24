@@ -11,6 +11,7 @@ import {
   Paperclip,
   AlertTriangle,
   Eye,
+  ArrowUpDown,
 } from 'lucide-react';
 
 type TabKey = 'all' | 'submitted' | 'changes' | 'completed';
@@ -68,6 +69,9 @@ export default function RMTaskReviewPage() {
   const [tasks, setTasks] = useState<TaskItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState<TabKey>('all');
+  const [sortField, setSortField] = useState<string>('dueDate');
+  const [sortDir, setSortDir] = useState<'asc' | 'desc'>('asc');
+  const toggleSort = (field: string) => { if (sortField === field) setSortDir(d => d === 'asc' ? 'desc' : 'asc'); else { setSortField(field); setSortDir('asc'); } };
 
   useEffect(() => {
     async function load() {
@@ -102,7 +106,7 @@ export default function RMTaskReviewPage() {
     completed: tasks.filter(t => t.status === 'COMPLETED').length,
   };
 
-  const filtered = activeTab === 'all'
+  const filtered = (activeTab === 'all'
     ? tasks
     : tasks.filter(t => {
         const map: Record<string, string[]> = {
@@ -111,7 +115,16 @@ export default function RMTaskReviewPage() {
           completed: ['COMPLETED'],
         };
         return map[activeTab]?.includes(t.status);
-      });
+      })
+  ).sort((a, b) => {
+    const dir = sortDir === 'asc' ? 1 : -1;
+    if (sortField === 'taskId') return a.taskId.localeCompare(b.taskId) * dir;
+    if (sortField === 'title') return a.title.localeCompare(b.title) * dir;
+    if (sortField === 'status') return a.status.localeCompare(b.status) * dir;
+    if (sortField === 'dueDate') return ((a.dueDate || '') < (b.dueDate || '') ? -1 : 1) * dir;
+    if (sortField === 'evidence') return (a.evidenceCount - b.evidenceCount) * dir;
+    return 0;
+  });
 
   return (
     <div style={{ display: 'flex', height: '100vh', background: 'var(--bg-primary)', color: 'var(--text-primary)', overflow: 'hidden' }}>
@@ -166,14 +179,24 @@ export default function RMTaskReviewPage() {
               <table className="risk-table">
                 <thead>
                   <tr>
-                    <th>TASK</th>
-                    <th>ASSIGNED TO</th>
-                    <th>LINKED RISK</th>
-                    <th>CONTROL</th>
-                    <th>STATUS</th>
-                    <th>DUE DATE</th>
-                    <th>EVIDENCE</th>
-                    <th>ACTION</th>
+                    {[
+                      { key: 'taskId', label: 'TASK' },
+                      { key: '', label: 'ASSIGNED TO' },
+                      { key: '', label: 'LINKED RISK' },
+                      { key: '', label: 'CONTROL' },
+                      { key: 'status', label: 'STATUS' },
+                      { key: 'dueDate', label: 'DUE DATE' },
+                      { key: 'evidence', label: 'EVIDENCE' },
+                      { key: '', label: 'ACTION' },
+                    ].map((col) => (
+                      <th key={col.label} onClick={col.key ? () => toggleSort(col.key) : undefined}
+                        style={{ cursor: col.key ? 'pointer' : 'default', userSelect: 'none' }}>
+                        <span style={{ display: 'inline-flex', alignItems: 'center', gap: '4px' }}>
+                          {col.label}
+                          {col.key && <ArrowUpDown size={10} style={{ opacity: sortField === col.key ? 1 : 0.3 }} />}
+                        </span>
+                      </th>
+                    ))}
                   </tr>
                 </thead>
                 <tbody>

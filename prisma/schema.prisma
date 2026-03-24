@@ -197,6 +197,7 @@ model Evidence {
   fileSize  String?
   fileType  String?
   url       String?
+  data      String?
 
   taskId    String
   task      Task     @relation(fields: [taskId], references: [id], onDelete: Cascade)

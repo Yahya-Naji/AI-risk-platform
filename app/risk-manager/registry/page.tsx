@@ -30,6 +30,7 @@ interface RiskRow {
   assignedTo: { name: string; avatar: string } | null;
   strategicObjective: string | null;
   createdAt: string;
+  updatedAt: string;
   _count: { controls: number; tasks: number };
 }
 
@@ -64,7 +65,7 @@ export default function RiskRegistryPage() {
   const [statusFilter, setStatusFilter] = useState('All');
   const [levelFilter, setLevelFilter] = useState('All');
   const [catFilter, setCatFilter] = useState('All');
-  const [sortField, setSortField] = useState<'inherentScore' | 'riskId' | 'title' | 'category' | 'createdAt'>('inherentScore');
+  const [sortField, setSortField] = useState<'inherentScore' | 'riskId' | 'title' | 'category' | 'createdAt' | 'updatedAt'>('inherentScore');
   const [sortDir, setSortDir] = useState<'asc' | 'desc'>('desc');
   const [aiLoading, setAiLoading] = useState(false);
   const [aiResult, setAiResult] = useState<string | null>(null);
@@ -97,9 +98,9 @@ export default function RiskRegistryPage() {
       return matchSearch && matchDept && matchStatus && matchLevel && matchCat;
     })
     .sort((a, b) => {
-      if (sortField === 'createdAt') {
-        const aTime = new Date(a.createdAt).getTime();
-        const bTime = new Date(b.createdAt).getTime();
+      if (sortField === 'createdAt' || sortField === 'updatedAt') {
+        const aTime = new Date(a[sortField]).getTime();
+        const bTime = new Date(b[sortField]).getTime();
         return sortDir === 'asc' ? aTime - bTime : bTime - aTime;
       }
       const aVal = a[sortField];
@@ -265,7 +266,8 @@ export default function RiskRegistryPage() {
                     { key: 'inherentScore', label: 'Scores (I/G/R)', sortable: true, width: '120px' },
                     { key: 'status', label: 'Status', sortable: false, width: '110px' },
                     { key: 'owner', label: 'Owner', sortable: false, width: '100px' },
-                    { key: 'createdAt', label: 'Date', sortable: true, width: '90px' },
+                    { key: 'createdAt', label: 'Created', sortable: true, width: '80px' },
+                    { key: 'updatedAt', label: 'Updated', sortable: true, width: '80px' },
                     { key: 'actions', label: 'Actions', sortable: false, width: '80px' },
                   ].map((col) => (
                     <th key={col.key} style={{
@@ -343,6 +345,13 @@ export default function RiskRegistryPage() {
                       </td>
                       <td style={{ padding: '10px 12px', fontSize: '11px', color: 'var(--text-muted)' }}>
                         {new Date(risk.createdAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
+                      </td>
+                      <td style={{ padding: '10px 12px', fontSize: '11px' }}>
+                        {(() => {
+                          const days = Math.floor((Date.now() - new Date(risk.updatedAt).getTime()) / 86400000);
+                          const color = days <= 7 ? '#10b981' : days <= 30 ? '#f59e0b' : '#ef4444';
+                          return <span style={{ color }}>{new Date(risk.updatedAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}</span>;
+                        })()}
                       </td>
                       <td style={{ padding: '10px 12px', textAlign: 'center' }} onClick={(e) => e.stopPropagation()}>
                         <button className="btn-primary" style={{ fontSize: '10px', padding: '4px 10px', display: 'inline-flex', alignItems: 'center', gap: '4px' }}

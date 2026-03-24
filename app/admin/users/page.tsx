@@ -14,6 +14,7 @@ import {
   CheckCircle,
   RefreshCw,
   Download,
+  ArrowUpDown,
 } from 'lucide-react';
 
 interface User {
@@ -86,6 +87,9 @@ export default function UsersPage() {
   const [editingUser, setEditingUser] = useState<User | null>(null);
   const [deleteConfirm, setDeleteConfirm] = useState<User | null>(null);
   const [toast, setToast] = useState<string | null>(null);
+  const [sortField, setSortField] = useState<string>('name');
+  const [sortDir, setSortDir] = useState<'asc' | 'desc'>('asc');
+  const toggleSort = (field: string) => { if (sortField === field) setSortDir(d => d === 'asc' ? 'desc' : 'asc'); else { setSortField(field); setSortDir('asc'); } };
 
   // Form state
   const [formData, setFormData] = useState({
@@ -143,6 +147,14 @@ export default function UsersPage() {
       (activeTab === 'business-owner' && u.role === 'BUSINESS_OWNER') ||
       (activeTab === 'executive' && u.role === 'EXECUTIVE');
     return matchSearch && matchDept && matchTab;
+  }).sort((a, b) => {
+    const dir = sortDir === 'asc' ? 1 : -1;
+    if (sortField === 'name') return a.name.localeCompare(b.name) * dir;
+    if (sortField === 'role') return a.role.localeCompare(b.role) * dir;
+    if (sortField === 'department') return a.department.localeCompare(b.department) * dir;
+    if (sortField === 'company') return (a.company || '').localeCompare(b.company || '') * dir;
+    if (sortField === 'createdAt') return (a.createdAt < b.createdAt ? -1 : 1) * dir;
+    return 0;
   });
 
   const toggleSelect = (id: string) => {
@@ -732,14 +744,24 @@ export default function UsersPage() {
                             style={{ accentColor: 'var(--accent-cyan)', cursor: 'pointer' }}
                           />
                         </th>
-                        <th>User</th>
-                        <th>Role</th>
-                        <th>Department</th>
-                        <th>Company</th>
-                        <th>Risks</th>
-                        <th>Tasks</th>
-                        <th>Joined</th>
-                        <th>Actions</th>
+                        {[
+                          { key: 'name', label: 'User' },
+                          { key: 'role', label: 'Role' },
+                          { key: 'department', label: 'Department' },
+                          { key: 'company', label: 'Company' },
+                          { key: '', label: 'Risks' },
+                          { key: '', label: 'Tasks' },
+                          { key: 'createdAt', label: 'Joined' },
+                          { key: '', label: 'Actions' },
+                        ].map((col) => (
+                          <th key={col.label} onClick={col.key ? () => toggleSort(col.key) : undefined}
+                            style={{ cursor: col.key ? 'pointer' : 'default', userSelect: 'none' }}>
+                            <span style={{ display: 'inline-flex', alignItems: 'center', gap: '4px' }}>
+                              {col.label}
+                              {col.key && <ArrowUpDown size={10} style={{ opacity: sortField === col.key ? 1 : 0.3 }} />}
+                            </span>
+                          </th>
+                        ))}
                       </tr>
                     </thead>
                     <tbody>

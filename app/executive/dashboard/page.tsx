@@ -678,7 +678,7 @@ export default function ExecutiveDashboard() {
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '14px' }}>
             <h3 style={{ fontSize: '14px', fontWeight: 600, margin: 0 }}>Top Priority Risks</h3>
             <button className="btn-secondary" style={{ fontSize: '11px', padding: '4px 10px', display: 'flex', alignItems: 'center', gap: '4px' }}
-              onClick={() => router.push('/risk-manager/registry')}>
+              onClick={() => router.push('/executive/registry')}>
               View All Risks <Eye size={10} />
             </button>
           </div>

@@ -1,7 +1,5 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/db";
-import { writeFile, mkdir, unlink } from "fs/promises";
-import path from "path";
 
 export async function POST(request: Request) {
   try {
@@ -16,38 +14,39 @@ export async function POST(request: Request) {
       );
     }
 
-    // Find the task by taskId
     const task = await prisma.task.findUnique({ where: { taskId } });
     if (!task) {
       return NextResponse.json({ error: "Task not found" }, { status: 404 });
     }
 
-    // Save file to public/uploads
-    const uploadsDir = path.join(process.cwd(), "public", "uploads");
-    await mkdir(uploadsDir, { recursive: true });
-
+    // Convert file to base64 and store in DB
     const bytes = await file.arrayBuffer();
-    const buffer = Buffer.from(bytes);
-    const uniqueName = `${Date.now()}-${file.name}`;
-    const filePath = path.join(uploadsDir, uniqueName);
-    await writeFile(filePath, buffer);
+    const base64 = Buffer.from(bytes).toString("base64");
+    const dataUri = `data:${file.type || "application/octet-stream"};base64,${base64}`;
 
     // Format file size
     const sizeKB = Math.round(file.size / 1024);
-    const fileSize = sizeKB > 1024 ? `${(sizeKB / 1024).toFixed(1)} MB` : `${sizeKB} KB`;
+    const fileSize =
+      sizeKB > 1024 ? `${(sizeKB / 1024).toFixed(1)} MB` : `${sizeKB} KB`;
 
-    // Create evidence record
     const evidence = await prisma.evidence.create({
       data: {
         fileName: file.name,
         fileSize,
         fileType: file.type || null,
-        url: `/uploads/${uniqueName}`,
+        url: null,
+        data: dataUri,
         taskId: task.id,
       },
     });
 
-    return NextResponse.json(evidence);
+    return NextResponse.json({
+      id: evidence.id,
+      fileName: evidence.fileName,
+      fileSize: evidence.fileSize,
+      fileType: evidence.fileType,
+      createdAt: evidence.createdAt,
+    });
   } catch (error) {
     console.error("Upload error:", error);
     return NextResponse.json(
@@ -69,14 +68,6 @@ export async function DELETE(request: Request) {
     const evidence = await prisma.evidence.findUnique({ where: { id } });
     if (!evidence) {
       return NextResponse.json({ error: "Not found" }, { status: 404 });
-    }
-
-    // Delete physical file if it exists
-    if (evidence.url) {
-      try {
-        const filePath = path.join(process.cwd(), "public", evidence.url);
-        await unlink(filePath);
-      } catch { /* file may not exist */ }
     }
 
     await prisma.evidence.delete({ where: { id } });
